@@ -1,0 +1,15 @@
+---
+title: "dataload"
+output: html_document
+---
+
+```{r dataload, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+beers_raw <- read.csv('Beers.csv')
+breweries_raw <- read.csv('Breweries.csv')
+```
+

@@ -1,0 +1,22 @@
+---
+title: "FinalReport"
+author: "Garrity/Palmer"
+date: "10/6/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r child = 'dataload.Rmd'}
+```
+
+## Introduction
+
+#```{r child = 'chapter1.Rmd'}
+#```
+
+#```{r child = 'chapter2.Rmd'}
+#```
+
