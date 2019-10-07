@@ -1,0 +1,14 @@
+---
+title: "question1"
+output: html_document
+---
+
+```{r question1, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+merged %>% group_by(State)
+```
+
