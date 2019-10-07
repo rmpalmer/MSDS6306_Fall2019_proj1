@@ -1,0 +1,17 @@
+---
+title: "question1"
+output: html_document
+---
+
+```{r question5, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+Which state has the maximum alcoholic beer?
+```{r}
+```
+
+Which state has the most bitter beer?
+```{r}
+```

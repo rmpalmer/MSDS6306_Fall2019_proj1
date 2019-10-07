@@ -1,0 +1,17 @@
+---
+title: "question1"
+output: html_document
+---
+
+```{r question4, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+Median alcohol content for each state
+```{r}
+```
+
+Median Bitterness unit for each state
+```{r}
+```
