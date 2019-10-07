@@ -1,0 +1,13 @@
+---
+title: "question6"
+output: html_document
+---
+
+```{r question6, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+Comment on the summary statistics and distribution of the ABV variable.
+```{r}
+```
