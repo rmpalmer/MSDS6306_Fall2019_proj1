@@ -1,0 +1,13 @@
+---
+title: "question7"
+output: html_document
+---
+
+```{r question7, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+Scatterplot of bitterness versus alcoholic content.
+```{r}
+```
