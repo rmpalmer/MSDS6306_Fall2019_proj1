@@ -29,5 +29,10 @@ str(breweries)
 library(tidyverse)
 library(ggplot2)
 
+breweries_by_state <- breweries %>% group_by(State) %>% summarize(count = n())
+
+breweries_by_state %>% ggplot(aes(x=reorder(State, -count), y = count)) +
+  geom_col()
+
 
 ```
