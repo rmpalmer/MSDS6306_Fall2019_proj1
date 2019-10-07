@@ -14,8 +14,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-#```{r child = 'chapter1.Rmd'}
-#```
+```{r child = 'question1.Rmd'}
+```
 
 #```{r child = 'chapter2.Rmd'}
 #```
