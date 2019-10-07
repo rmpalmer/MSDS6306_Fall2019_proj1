@@ -1,6 +1,6 @@
 ---
 title: "Beers_Project"
-author: "Steven Garrity"
+author: "Steven Garrity + Richard Palmer"
 date: "10/6/2019"
 output: html_document
 editor_options: 
