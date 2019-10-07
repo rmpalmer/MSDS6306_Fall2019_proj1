@@ -1,0 +1,33 @@
+---
+title: "Beers_Project"
+author: "Steven Garrity"
+date: "10/6/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Import data
+```{r}
+beers <- read.csv('/Users/stevengarrity/SMU_MSDS/DS6306_DoingDataScience/MSDS6306_Fall2019_proj1/Beers.csv', header=TRUE)
+
+breweries <- read.csv('/Users/stevengarrity/SMU_MSDS/DS6306_DoingDataScience/MSDS6306_Fall2019_proj1/Breweries.csv', header=TRUE)
+
+dim(beers)
+str(beers)
+
+dim(breweries)
+str(breweries)
+```
+
+# Question 1 - How Many Breweries per State:
+```{r}
+library(tidyverse)
+library(ggplot2)
+
+
+```
