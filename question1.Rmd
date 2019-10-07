@@ -9,6 +9,8 @@ library(tidyverse)
 ```
 
 ```{r}
-merged %>% group_by(State)
+# want to figure out how to order the column chart by n...
+by_state <- merged %>% group_by(State) %>% tally() %>% arrange(n)
+by_state %>% ggplot(aes(x=State,y=n)) + geom_col() + ggtitle('Breweries per State') + xlab('State') + ylab('Count')
 ```
 

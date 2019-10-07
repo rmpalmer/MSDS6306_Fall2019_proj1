@@ -12,7 +12,5 @@ library(tidyverse)
 beers_raw <- read.csv('Beers.csv') %>% rename(Brew_ID = Brewery_id, Beer_name = Name)
 breweries_raw <- read.csv('Breweries.csv') %>% rename(Brewery_name = Name)
 merged <- inner_join(beers_raw, breweries_raw,by='Brew_ID')
-head(merged)
-tail(merged)
 ```
 

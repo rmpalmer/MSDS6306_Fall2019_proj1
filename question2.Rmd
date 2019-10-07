@@ -1,0 +1,16 @@
+---
+title: "question1"
+output: html_document
+---
+
+```{r question2, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+Sanity check on the merged dataset
+```{r}
+head(merged)
+tail(merged)
+```
+
