@@ -8,10 +8,32 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
-Median alcohol content for each state
+Compute the Median alcohol content for all the beers in each state
 ```{r}
+# drop any observations without valid ABV values, group by state, and compute the median
+abv_df <- merged %>% drop_na(ABV) %>% group_by(State) %>% summarize(median_abv = median(ABV)) 
+
+# plot
+abv_df %>% ggplot(aes(x=State,y=median_abv)) + geom_col() + ggtitle('Median ABV by state')
+
+# order by median ABV
+abv_df$State <- factor(abv_df$State,level=abv_df$State[order(abv_df$median_abv,decreasing=TRUE)])
+
+# ..and replot
+abv_df %>% ggplot(aes(x=State,y=median_abv)) + geom_col() + ggtitle('Median ABV by state')
 ```
 
-Median Bitterness unit for each state
+Median Bitterness unit for all the beers in each state
 ```{r}
+# drop any obsvervations without valid IBU values, roup by state, and compute the median
+ibu_df <- merged %>% drop_na(IBU) %>% group_by(State) %>% summarize(median_ibu = median(IBU)) 
+
+# plot
+ibu_df %>% ggplot(aes(x=State,y=median_ibu)) + geom_col() + ggtitle('Median IBU by state')
+
+# order by median IBU
+ibu_df$State <- factor(ibu_df$State,level=ibu_df$State[order(ibu_df$median_ibu,decreasing=TRUE)])
+
+# ..and replot
+ibu_df %>% ggplot(aes(x=State,y=median_ibu)) + geom_col() + ggtitle('Median IBU by state')
 ```

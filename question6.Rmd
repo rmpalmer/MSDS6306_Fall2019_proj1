@@ -10,4 +10,19 @@ library(tidyverse)
 
 Comment on the summary statistics and distribution of the ABV variable.
 ```{r}
+summary(merged$ABV)
 ```
+
+The mean is slightly higher than the median, which would indicate a right skewed distribution,
+one with a long tail of high values.
+
+```{r}
+merged %>% drop_na(ABV) %>%
+  ggplot(aes(x=ABV)) + geom_histogram(aes(y=..density..),bins=31) + 
+  ggtitle('Histogram of ABV values') +
+  geom_vline(aes(xintercept=median(ABV)),color='blue',linetype='dashed',size=1) +
+  geom_vline(aes(xintercept=mean(ABV)), color='red',linetype='dotted',size=1) +
+  geom_density(alpha=.2,fill="#FF6666")
+```
+
+The histogram bears this out.
