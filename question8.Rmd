@@ -9,6 +9,7 @@ library(tidyverse)
 library(class)
 library(caret)
 library(e1071)
+library(plot.matrix)
 ```
 
 Categorize Ales...
@@ -60,3 +61,29 @@ plot(seq(1,numks,1),mean_acc,type="l")
 ```
 
 k of 5 seems to do a good job.
+
+the following is still very much experimental...
+```{r}
+nrow=100
+ncol=100
+
+abv_min = min(for_knn$ABV)
+abv_inc = (max(for_knn$ABV) - abv_min)/nrow
+
+ibu_min = min(for_knn$IBU)
+ibu_inc = (max(for_knn$IBU) - ibu_min)/ncol
+
+points <- matrix(nrow=nrow,ncol=ncol)
+probe  <- matrix(nrow=1,ncol=2)
+for (i in 1:nrow)
+{
+  for (j in 1:ncol)
+  {
+    probe[1,1] = abv_min + (i-1)*abv_inc
+    probe[1,2] = ibu_min + (j-1)*ibu_inc
+    category <-  knn(for_knn[,c(1,2)], probe, for_knn$category,k=5)
+    points[i,j] = category
+  }
+}
+plot(points)
+```
