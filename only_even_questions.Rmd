@@ -1,0 +1,30 @@
+---
+title: "Only the Even Questions"
+author: "Steven Garrity + Richard Palmer"
+date: "10/6/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r child = 'dataload.Rmd'}
+```
+
+## Introduction
+
+
+```{r child = 'question2.Rmd'}
+```
+
+```{r child = 'question4.Rmd'}
+```
+
+```{r child = 'question6.Rmd'}
+```
+
+```{r child = 'question8.Rmd'}
+```
+
+
