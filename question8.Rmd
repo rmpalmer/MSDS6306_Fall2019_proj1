@@ -6,8 +6,57 @@ output: html_document
 ```{r question8, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(class)
+library(caret)
+library(e1071)
 ```
 
-Study Ales...
+Categorize Ales...
 ```{r}
+# categorize beers as ipa, or other ale
+beers_categorized <- beers_raw %>%
+  mutate(is_ipa = grepl("\\bIPA\\b",Style,ignore.case = TRUE)) %>%
+  mutate(is_ale = grepl("\\bale\\b",Style,ignore.case = TRUE)) %>%
+  mutate(is_other_ale = (is_ale & !is_ipa))
+
+# can only work with beers that have valid values,
+# and we only care about ipa and other ales
+# and make a factor for the type
+for_knn <- beers_categorized %>% drop_na(ABV,IBU) %>%
+  filter(is_ipa | is_other_ale) %>%
+  mutate(category = as.factor(ifelse(is_ipa,'IPA','Other'))) %>%
+  select(ABV,IBU,category)
+                                                
 ```
+
+Make a scatter plot of IBU vs ABV, with only IPA's and other ales
+```{r}
+for_knn %>% ggplot(aes(x=IBU,y=ABV,color=category)) + 
+  geom_point() + ggtitle('ABV vs IBU for IPAs and other ales')
+```
+
+Do KNN classification
+```{r}
+splitPerc <- .7
+iterations <- 50
+numks <- 20
+acc <- matrix(nrow=iterations,ncol=numks)
+for (j in 1:iterations)
+  {
+    accs = data.frame(accuracy = numeric(numks), k = numeric(numks))
+    trainIndices = sample(1:dim(for_knn)[1],round(splitPerc * dim(for_knn)[1]))
+    train = for_knn[trainIndices,]
+    test = for_knn[-trainIndices,]
+    for(i in 1:numks)
+      {
+        classifications = knn(train[,c(1,2)],test[,c(1,2)],as.factor(train$category), prob = TRUE, k = i)
+        table(as.factor(test$category),classifications)
+        CM = confusionMatrix(table(as.factor(test$category),classifications))
+        acc[j,i] = CM$overall[1]
+      }
+}
+mean_acc <- colMeans(acc)
+plot(seq(1,numks,1),mean_acc,type="l")
+```
+
+k of 5 seems to do a good job.
