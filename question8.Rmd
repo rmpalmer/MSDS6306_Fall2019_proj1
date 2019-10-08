@@ -26,8 +26,11 @@ beers_categorized <- beers_raw %>%
 for_knn <- beers_categorized %>% drop_na(ABV,IBU) %>%
   filter(is_ipa | is_other_ale) %>%
   mutate(category = as.factor(ifelse(is_ipa,'IPA','Other'))) %>%
-  select(ABV,IBU,category)
-                                                
+  mutate(abv_z = scale(ABV), ibu_z = scale(IBU)) %>%
+  select(ABV,IBU,abv_z,ibu_z,category)
+
+# columns to use for predictors
+knn_pred_indices = c("abv_z","ibu_z")                                                
 ```
 
 Make a scatter plot of IBU vs ABV, with only IPA's and other ales
@@ -40,7 +43,7 @@ Do KNN classification
 ```{r}
 splitPerc <- .7
 iterations <- 50
-numks <- 20
+numks <- 50
 acc <- matrix(nrow=iterations,ncol=numks)
 for (j in 1:iterations)
   {
@@ -50,7 +53,7 @@ for (j in 1:iterations)
     test = for_knn[-trainIndices,]
     for(i in 1:numks)
       {
-        classifications = knn(train[,c(1,2)],test[,c(1,2)],as.factor(train$category), prob = TRUE, k = i)
+        classifications = knn(train[,knn_pred_indices],test[,knn_pred_indices],as.factor(train$category), prob = TRUE, k = i)
         table(as.factor(test$category),classifications)
         CM = confusionMatrix(table(as.factor(test$category),classifications))
         acc[j,i] = CM$overall[1]
@@ -60,7 +63,14 @@ mean_acc <- colMeans(acc)
 plot(seq(1,numks,1),mean_acc,type="l")
 ```
 
-k of 5 seems to do a good job.
+```{r}
+best_k <- which.max(mean_acc)
+max_acc <- max(mean_acc)
+best_k
+max_acc
+```
+
+k of 17 seems to do the best job.
 
 the following is still very much experimental...
 ```{r}
@@ -73,17 +83,5 @@ abv_inc = (max(for_knn$ABV) - abv_min)/nrow
 ibu_min = min(for_knn$IBU)
 ibu_inc = (max(for_knn$IBU) - ibu_min)/ncol
 
-points <- matrix(nrow=nrow,ncol=ncol)
-probe  <- matrix(nrow=1,ncol=2)
-for (i in 1:nrow)
-{
-  for (j in 1:ncol)
-  {
-    probe[1,1] = abv_min + (i-1)*abv_inc
-    probe[1,2] = ibu_min + (j-1)*ibu_inc
-    category <-  knn(for_knn[,c(1,2)], probe, for_knn$category,k=5)
-    points[i,j] = category
-  }
-}
-plot(points)
+
 ```
