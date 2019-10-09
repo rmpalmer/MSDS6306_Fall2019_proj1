@@ -56,7 +56,7 @@ breweries_by_state_tomap$perCapita <- breweries_by_state_tomap$count/(breweries_
 plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
   values = "count", theme = theme_map(), labels = FALSE,
   label_color = "black") +
-  scale_fill_continuous(name = "n", low="white", high="red") +
+  scale_fill_continuous(name = "n", low="ivory", high="red2") +
   theme(legend.position="right") +
   labs(title = 'Number of Breweries in each state')
 
@@ -64,8 +64,10 @@ plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
 plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
   values = "perCapita", theme = theme_map(), labels = FALSE,
   label_color = "black") +
-  scale_fill_continuous(name = "n", low="white", high="blue") +
+  scale_fill_continuous(name = "n", low="ivory", high="navyblue") +
   theme(legend.position="right") +
   labs(title = 'Breweries per Capita')
+
+# The Rocky Mtn region loves beer!
 ```
 
