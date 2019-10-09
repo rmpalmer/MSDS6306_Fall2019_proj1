@@ -8,9 +8,13 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
-Sanity check on the merged dataset
+As a check on importing and merging data, print the first six and last six observations.
 ```{r}
-head(merged)
-tail(merged)
+cat ("The first six observations, after sorting by beer ID.")
+head(merged,6)
+```
+```{r}
+cat ("The last six observations, after sorting by beer ID.")
+tail(merged,6)
 ```
 
