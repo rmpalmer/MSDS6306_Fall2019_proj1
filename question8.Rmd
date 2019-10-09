@@ -9,7 +9,7 @@ library(tidyverse)
 library(class)
 library(caret)
 library(e1071)
-library(plot.matrix)
+library(pracma)
 ```
 
 Categorize Ales...
@@ -53,7 +53,9 @@ for (j in 1:iterations)
     test = for_knn[-trainIndices,]
     for(i in 1:numks)
       {
-        classifications = knn(train[,knn_pred_indices],test[,knn_pred_indices],as.factor(train$category), prob = TRUE, k = i)
+        classifications = knn(train[,knn_pred_indices],
+                              test[,knn_pred_indices],
+                              as.factor(train$category), prob = TRUE, k = i)
         table(as.factor(test$category),classifications)
         CM = confusionMatrix(table(as.factor(test$category),classifications))
         acc[j,i] = CM$overall[1]
@@ -72,16 +74,56 @@ max_acc
 
 k of 17 seems to do the best job.
 
-the following is still very much experimental...
 ```{r}
-nrow=100
-ncol=100
-
-abv_min = min(for_knn$ABV)
-abv_inc = (max(for_knn$ABV) - abv_min)/nrow
-
-ibu_min = min(for_knn$IBU)
-ibu_inc = (max(for_knn$IBU) - ibu_min)/ncol
-
-
+splitPerc <- .7
+trainIndices = sample(1:dim(for_knn)[1],round(splitPerc * dim(for_knn)[1]))
+train = for_knn[trainIndices,]
+test = for_knn[-trainIndices,]
+classifications = knn(train[,knn_pred_indices],
+                      test[,knn_pred_indices],
+                      as.factor(train$category), prob = TRUE, k = best_k)
+CM = confusionMatrix(table(as.factor(test$category),classifications))
+CM
 ```
+
+```{r}
+one_beer <- knn(for_knn[,knn_pred_indices],data.frame(0,0),as.factor(for_knn$category),prob=TRUE,k=best_k)
+one_beer
+```
+
+```{r}
+knn_pred <- knn(for_knn[,knn_pred_indices],
+                for_knn[,knn_pred_indices],
+                as.factor(for_knn$category),k=best_k)
+with_pred <- cbind(for_knn,knn_pred)
+with_pred %>% ggplot(aes(x=IBU,y=ABV,color=knn_pred)) + geom_point() + ggtitle('Predicted Class')
+```
+
+```{r}
+ABV <- linspace(min(for_knn$ABV),max(for_knn$ABV),100)
+IBU <- linspace(min(for_knn$IBU),max(for_knn$IBU),100)
+
+dummy <- data.frame(ABV=rep(0,100*100),IBU=rep(0,100*100))
+cnt <- 0
+for (i in 1:100)
+{
+  for (j in 1:100)
+  {
+    cnt <- cnt + 1
+    dummy[cnt,] <- c(ABV[i],IBU[j])
+  }
+}
+synth <- dummy %>% mutate(abv_z = scale(ABV), ibu_z = scale(IBU))
+
+synth_pred <- knn(for_knn[,knn_pred_indices],
+                  synth[,knn_pred_indices],
+                  as.factor(for_knn$category),k=best_k)
+synthetic <- cbind(synth,synth_pred)
+synthetic %>% ggplot(aes(x=IBU,y=ABV,color=synth_pred)) + geom_point() + ggtitle('Class Map')
+```
+
+
+
+
+
+
