@@ -64,10 +64,9 @@ plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
 plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
   values = "perCapita", theme = theme_map(), labels = FALSE,
   label_color = "black") +
-  scale_fill_continuous(name = "n", low="ivory", high="navyblue") +
-  theme(legend.position="right") +
-  labs(title = 'Breweries per Capita')
-
-# The Rocky Mtn region loves beer!
+  scale_fill_continuous(name = "n*", low="ivory", high="navyblue") +
+  theme(legend.position="right", 
+        plot.caption = element_text(color="navyblue", size = 9, hjust=1)) +
+  labs(title = 'Breweries per Capita', caption = "*breweries per 1,000,000 people")
 ```
 
