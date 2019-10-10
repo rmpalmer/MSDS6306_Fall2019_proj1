@@ -5,102 +5,68 @@ editor_options:
   chunk_output_type: console
 ---
 
+# Question 1: How many breweries in each state?
 ```{r question1, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(ggplot2)
+library(maps)
+library(usmap)
+library(ggthemes)
 ```
 
+# Basic solution:
 ```{r}
-library(ggplot2)
-# want to figure out how to order the column chart by n...
 breweries_by_state <- breweries_raw %>%  group_by(State) %>% summarize(count = n())
 
-# simple column chart
+# simple column chart (kind of lame)
 breweries_by_state %>% ggplot(aes(x=reorder(State, -count), y=count)) +
   geom_col() +
   labs(title = "Breweries by State", y="Number of Breweries")
-
-#################################################################
-# It would be a lot more interesting to have a map visualization:
-#################################################################
-library(maps)
-states <- map_data("state")
-
-# capitalize the first letter of each state name
-# capFirst <- function(s) {
-#     paste(toupper(substring(s, 1, 1)), substring(s, 2), sep = "")
-# }
-# states$State <- capFirst(states$region)
-
-states %>% ggplot() + 
-  geom_polygon(aes(x = long, y = lat, fill = region, group = group), color = "white") + 
-  coord_fixed(1.3) +
-  guides(fill=FALSE)  # do this to leave off the color legend
-
-
-st_crosswalk <- tibble(state = state.name) %>%
-   bind_cols(tibble(abb = state.abb)) %>% 
-   bind_rows(tibble(state = "District of Columbia", abb = "DC"))
-# 
-# st_crosswalk$state <- as.factor(st_crosswalk$state)
-# st_crosswalk$abb <- as.factor(st_crosswalk$abb)
-
-# breweries_by_state$count <- as.factor(breweries_by_state$count)
-
-colnames(breweries_by_state)[1] = "abb"
-breweries_by_state$abb <- as.character(breweries_by_state$abb)
-
-
-# this merge was kicking my ass. I now see that the problem is an empty space in the "breweries_by_state" state abbreviation. I need to clean that and then it should work.
-test <- merge(breweries_by_state, st_crosswalk, by="abb")
-
-test$count <- as.integer(test$count)
-
-
-
-
-
-
-
-
-lookup = data.frame(State = state.abb, StateName = state.name) 
-breweries_by_state2 = inner_join(breweries_by_state,lookup,"State")
-
-
-test <- merge(states, breweries_by_state, by = "abb")
-
-
-
-
-
-
-
-
-library(ggplot2)
-library(maps)
-library(dplyr)
-library(mapproj)
-#makes a data frame with State name and abbreviation
-lookup = data.frame(abb = state.abb, State = state.name) 
-colnames(breweries_by_state)[1] = "abb" # Change Column Name
-
- # make one dataset with state names and abb
-AcuMapData = count(Acu2,State) #count up the occurance of each state. 
-#AcuMapData = AcuMapData[-c(5,9,43),] #Shows contrast between other states better
-colnames(AcuMapData)[2] = "AcuSpikes" #change "n" to "Acuspikes"
-AcuMapData$region <- tolower(AcuMapData$State)
-AcuMapData2 = AcuMapData[-1]
-states <- map_data("state")
-map.df <- merge(states,AcuMapData2, by="region", all.x=T)
-map.df <- map.df[order(map.df$order),]
-ggplot(map.df, aes(x=long,y=lat,group=group))+
-  geom_polygon(aes(fill=AcuSpikes))+
-  geom_path()+ 
-  scale_fill_gradientn(colours=rev(heat.colors(10)),na.value="grey90")+ggtitle("Acuspike Systems by State")+
-coord_map()
-
 ```
 
+# It would be a lot more interesting to have a map visualization
 ```{r}
+# library(maps)
+states <- map_data("state")
+
+# found an empty white space in the state abbreviation data. Remove it first:
+breweries_by_state$State <- str_trim(breweries_by_state$State, "left")
+
+# add DC to embedded "state" dataset:
+states_and_dc <- tibble(state = state.name) %>%
+   bind_cols(tibble(abbr = state.abb)) %>% 
+   bind_rows(tibble(state = "District of Columbia", abb = "DC"))
+
+# need to match the column name for later merge:
+colnames(breweries_by_state)[1] = "abbr"
+
+# This appears to be necessary, but I'm not 100% certain why:
+breweries_by_state$abbr <- as.character(breweries_by_state$abbr)
+
+# merge three dataframes: brewery count per state, state names and abbreviations, and state population data
+breweries_by_state_temp <- merge(breweries_by_state, states_and_dc, by="abbr")
+breweries_by_state_tomap <- merge(breweries_by_state_temp, statepop, by="abbr")
+breweries_by_state_tomap$perCapita <- breweries_by_state_tomap$count/(breweries_by_state_tomap$pop_2015/1000000)
+
+# library(usmap)
+# library(ggthemes)
+
+### Map the total number of breweries in each state:
+plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
+  values = "count", theme = theme_map(), labels = FALSE,
+  label_color = "black") +
+  scale_fill_continuous(name = "n", low="ivory", high="red2") +
+  theme(legend.position="right") +
+  labs(title = 'Number of Breweries in each state')
+
+### Map the number of breweries per capita in each state:
+plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
+  values = "perCapita", theme = theme_map(), labels = FALSE,
+  label_color = "black") +
+  scale_fill_continuous(name = "n*", low="ivory", high="navyblue") +
+  theme(legend.position="right", 
+        plot.caption = element_text(color="navyblue", size = 8, hjust=1)) +
+  labs(title = 'Breweries per Capita', caption = "*breweries per 1,000,000 people")
 ```
 
