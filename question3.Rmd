@@ -1,0 +1,16 @@
+---
+title: "question3"
+author: "Steven Garrity"
+date: "10/9/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 3: Address the missing values in each column.
+```{r}
+
+```
+
