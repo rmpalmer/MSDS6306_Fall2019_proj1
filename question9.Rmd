@@ -1,0 +1,13 @@
+---
+title: "question9"
+output: html_document
+---
+
+```{r question9, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+Knocking their socks off.
+```{r}
+```
