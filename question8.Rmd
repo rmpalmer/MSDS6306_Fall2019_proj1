@@ -12,6 +12,7 @@ library(e1071)
 library(pracma)
 ```
 
+# Question 8
 Categorize Ales...
 ```{r}
 # categorize beers as ipa, or other ale

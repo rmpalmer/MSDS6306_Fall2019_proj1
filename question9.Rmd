@@ -8,6 +8,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
+# Question 9
 Knocking their socks off.
 ```{r}
 ```

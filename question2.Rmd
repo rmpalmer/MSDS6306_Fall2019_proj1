@@ -8,6 +8,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
+# Question 2
 As a check on importing and merging data, print the first six and last six observations.
 ```{r}
 cat ("The first six observations, after sorting by beer ID.")

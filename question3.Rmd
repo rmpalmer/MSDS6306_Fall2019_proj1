@@ -5,11 +5,12 @@ date: "10/9/2019"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r question3, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Question 3: Address the missing values in each column.
+# Question 3
+Address the missing values in each column.
 ```{r}
 
 ```
