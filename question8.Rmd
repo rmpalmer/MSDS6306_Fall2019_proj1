@@ -124,14 +124,16 @@ Consider t-tests of ABV and IBU
 
 First check normality
 ```{r}
-for_knn %>% ggplot(aes(x=ABV,color=category)) +
-  geom_histogram(fill="white",alpha=0.5,position="identity") +
+for_knn %>% ggplot(aes(x=ABV)) +
+  geom_histogram(aes(y=..density..,fill=category),show.legend = FALSE,bins=21) +
+  facet_grid(category~.) +
   ggtitle('histogram of ABV by category')
 ```
 
 ```{r}
-for_knn %>% ggplot(aes(x=IBU,color=category)) +
-  geom_histogram(fill="white",alpha=0.5,position="identity") +
+for_knn %>% ggplot(aes(x=IBU)) +
+  geom_histogram(aes(y=..density..,fill=category),show.legend = FALSE,bins=21) +
+  facet_grid(category~.) +
   ggtitle('histogram of IBU by category')
 ```
 
