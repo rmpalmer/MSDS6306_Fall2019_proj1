@@ -6,6 +6,10 @@ output: html_document
 ```{r question4, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+
+library(usmap)
+library(ggthemes)
+
 ```
 
 Compute the Median alcohol content for all the beers in each state
@@ -37,3 +41,68 @@ ibu_df$State <- factor(ibu_df$State,level=ibu_df$State[order(ibu_df$median_ibu,d
 # ..and replot
 ibu_df %>% ggplot(aes(x=State,y=median_ibu)) + geom_col() + ggtitle('Median IBU by state')
 ```
+
+```{r}
+states <- map_data("state")
+states_and_dc <- tibble(state = state.name) %>%
+   bind_cols(tibble(abbr = state.abb)) %>% 
+   bind_rows(tibble(state = "District of Columbia", abb = "DC"))
+```
+
+```{r}
+abv_by_state <- abv_df %>%  group_by(State) %>% summarize(abv=first(median_abv))
+abv_by_state$State <- str_trim(abv_by_state$State, "left")
+
+colnames(abv_by_state)[1] = "abbr"
+abv_by_state$abbr <- as.character(abv_by_state$abbr)
+
+abv_by_state_tomap <- merge(abv_by_state, states_and_dc, by="abbr")
+
+plot_usmap(regions = c("states"), data = abv_by_state_tomap,
+  values = "abv", theme = theme_map(), labels = FALSE,
+  label_color = "black") +
+  scale_fill_continuous(name = "ABV", low="ivory", high="red2") +
+  theme(legend.position="right") +
+  labs(title = 'Median ABV of beers by state')
+```
+
+```{r}
+ibu_by_state <- ibu_df %>%  group_by(State) %>% summarize(ibu=first(median_ibu))
+ibu_by_state$State <- str_trim(ibu_by_state$State, "left")
+
+colnames(ibu_by_state)[1] = "abbr"
+ibu_by_state$abbr <- as.character(ibu_by_state$abbr)
+
+ibu_by_state_tomap <- merge(ibu_by_state, states_and_dc, by="abbr")
+
+plot_usmap(regions = c("states"), data = ibu_by_state_tomap,
+  values = "ibu", theme = theme_map(), labels = FALSE,
+  label_color = "black") +
+  scale_fill_continuous(name = "ibu", low="ivory", high="red2") +
+  theme(legend.position="right") +
+  labs(title = 'Median ibu of beers by state')
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
