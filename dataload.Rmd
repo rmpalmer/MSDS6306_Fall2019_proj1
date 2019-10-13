@@ -8,6 +8,7 @@ editor_options:
 ```{r dataload, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(usmap)
 ```
 
 ```{r}
@@ -23,6 +24,5 @@ states <- map_data("state")
 states_and_dc <- tibble(state = state.name) %>%
    bind_cols(tibble(abbr = state.abb)) %>% 
    bind_rows(tibble(state = "District of Columbia", abb = "DC"))
-
 ```
 

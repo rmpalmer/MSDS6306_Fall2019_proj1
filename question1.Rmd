@@ -30,13 +30,13 @@ breweries_by_state %>% ggplot(aes(x=reorder(State, -count), y=count)) +
 # library(maps)
 states <- map_data("state")
 
-# found an empty white space in the state abbreviation data. Remove it first:
-breweries_by_state$State <- str_trim(breweries_by_state$State, "left")
-
 # add DC to embedded "state" dataset:
 states_and_dc <- tibble(state = state.name) %>%
    bind_cols(tibble(abbr = state.abb)) %>% 
    bind_rows(tibble(state = "District of Columbia", abb = "DC"))
+
+# found an empty white space in the state abbreviation data. Remove it first:
+breweries_by_state$State <- str_trim(breweries_by_state$State, "left")
 
 # need to match the column name for later merge:
 colnames(breweries_by_state)[1] = "abbr"
