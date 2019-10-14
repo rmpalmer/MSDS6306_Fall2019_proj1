@@ -45,3 +45,38 @@ merged %>%
 ```
 
 The histogram bears this out.
+
+Out of curiosity, repeat this for IBU
+
+```{r}
+summary(merged$IBU)
+summary(merged$IBUfill)
+```
+
+```{r}
+merged %>% drop_na(IBU) %>%
+  ggplot(aes(x=IBU)) + geom_histogram(aes(y=..density..),bins=27) + 
+  ggtitle('Histogram of IBU values (no infilling)') +
+  geom_vline(aes(xintercept=median(IBU)),color='blue',linetype='dashed',size=1) +
+  geom_text(mapping=aes(x=median(IBU),y=.022,label="median"),
+            color="blue",angle=90,vjust=-0.4,show.legend=FALSE) +
+  geom_vline(aes(xintercept=mean(IBU)), color='red',linetype='dotted',size=1) +
+  geom_text(mapping=aes(x=mean(IBU),y=.022,label="mean"),
+            color="red",angle=90,vjust=-0.4,show.legend=FALSE) +
+  geom_density(alpha=.2,fill="#FF6666")
+```
+
+```{r}
+merged %>%
+  ggplot(aes(x=IBUfill)) + geom_histogram(aes(y=..density..),bins=27) + 
+  ggtitle('Histogram of IBU values (missing values inferred)') +
+  geom_vline(aes(xintercept=median(IBUfill)),color='blue',linetype='dashed',size=1) +
+  geom_text(mapping=aes(x=median(IBUfill),y=.022,label="median"),
+            color="blue",angle=90,vjust=-0.4,show.legend=FALSE) +
+  geom_vline(aes(xintercept=mean(IBUfill)), color='red',linetype='dotted',size=1) +
+  geom_text(mapping=aes(x=mean(IBUfill),y=.022,label="mean"),
+            color="red",angle=90,vjust=-0.4,show.legend=FALSE) +
+  geom_density(alpha=.2,fill="#FF6666")
+```
+
+
