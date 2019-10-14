@@ -7,7 +7,7 @@ summary: "We found that IBU and ABV were the only features with missing values. 
 ---
 
 ```{r question3, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 # Question 3: Address the missing values in each column.
@@ -100,6 +100,12 @@ test %>% ggplot(aes(x=IBU, y=predictions)) +
   geom_smooth(method='lm', col="darkgrey") +
   labs(title='Regression Tree Model Performance', x="Actual IBU", y="Predicted IBU")
 ######
+
+# now that model performance is complete, fit a new model using all available data. This model will be used to fill IBU values.
+rtree <- rpart(IBU ~ ABV+Style, 
+               data = forTraining_IBU_rtree,
+               method = "anova",
+               control = list(cp = 0.0001, xval = 1000))
 
 ### sanity check before updating the "merged" data frame
 # merged$IBU[missingIBUindex[1]]
