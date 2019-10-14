@@ -3,15 +3,21 @@ title: "question3"
 author: "Steven Garrity"
 date: "10/9/2019"
 output: html_document
+summary: "We found that IBU and ABV were the only features with missing values. ABV had XX NAs and IBU had 1005 NAs. All of the ABV NAs also had NA IBU. We chose to fill ABV values with the median ABV from beers of the same type. To fill missing values in IBU, we fit a regression tree to observations without missing values and then used that model to predict each missing IBU value."
 ---
 
 ```{r question3, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Question 3
-Address the missing values in each column.
+# Question 3: Address the missing values in each column.
+
+Data Exploration:
 ```{r}
+########################################################################
+# Data Exploration
+########################################################################
+
 n_cols = dim(merged)[2]
 for (i in 1:n_cols)
 {
@@ -25,90 +31,85 @@ missingABVindex <- which(is.na(merged$ABV))
 allNAindex <- c(missingIBUindex,missingABVindex)
 length(missingIBUindex)
 length(unique(allNAindex)) 
+```
 
-#try filling ABV values first with the median value by the relevant beer style. In other words, find the style of the beer with a missing value, calculate the median ABV for that style of beer, and fill the missing value with the median for that style.
+Fill ABV missing values:
+```{r}
+########################################################################
+# Fill ABV missing values
+########################################################################
+
+# Find the style of each beer with a missing value, calculate the median ABV for that style of beer, and fill the missing value with the median for that style. Filled IBU values are placed directly back into the "merged" dataset.
 for (i in 1:length(missingABVindex))
 {
   merged$ABV[missingABVindex[i]] <- median(merged$ABV[merged$Style == merged$Style[missingABVindex[i]]],na.rm = TRUE)
 }
 
 # sanity check to make sure that we filled all of the missing values:
-# which(is.na(merged$ABV)) # looks like all values were filled...we are good to proceed
+which(is.na(merged$ABV)) # looks like all values were filled...we are good to proceed
+```
 
-
-# Use ABV, Style, Brewery_name, and State as predictor variables in a knn model
-forTraining_IBU_kNN <- merged[-missingIBUindex,] %>% 
-  select(ABV,Style,Brewery_name,State,IBU) %>%
-  mutate(iStyle = as.integer(Style), 
-         iBrewery_name = as.integer(Brewery_name), iState = as.integer(State)) %>%
-  mutate(abv_z = scale(ABV), style_z = scale(iStyle), 
-         brewery_z = scale(iBrewery_name), state_z = scale(iState), IBU = as.factor(IBU)) %>%
-  select(abv_z, style_z, brewery_z, state_z, IBU)
-
-forFilling_IBU_kNN <- merged[missingIBUindex,] %>% select(ABV, Style, Brewery_name, State, IBU)
-
-### first tune hyperparameter "k"
-splitPerc = .75
-iterations = 1
-numks = 20
-
-masterAcc = matrix(nrow = iterations, ncol = numks)
-  
-for(j in 1:iterations)
-{
-trainIndices = sample(1:dim(forTraining_IBU_kNN)[1],round(splitPerc * dim(forTraining_IBU_kNN)[1]))
-train = forTraining_IBU_kNN[trainIndices,]
-test = forTraining_IBU_kNN[-trainIndices,]
-for(i in 1:numks)
-{
-  classifications = knn(train[,c(1,4)],test[,c(1,4)],train$IBU, prob = TRUE, k = i)
-  table(classifications,test$IBU)
-  CM = confusionMatrix(table(classifications,test$IBU))
-  masterAcc[j,i] = CM$overall[1]
-}
-
-}
-
-MeanAcc = colMeans(masterAcc)
-plot(seq(1,numks,1),MeanAcc*100, type = "l", xlab = "k", ylab = "Accuracy (%)")
-
-# find index of k that produces highest accuracy:
-which.max(MeanAcc)
-
-xx <- attr(classifications,'levels')
-
-######### Look at a regression tree (CART)
-library(rpart)
-library(rpart.plot)
+Fill IBU missing values: ***note that I use "set.seed(8)" to ensure that the model predictions are always the same. My understand is that this consistency should ensure that any downstream dependency shouldn't break. (?)
+```{r}
+########################################################################
+# Fill IBU missing values
+########################################################################
+# Let's try a regression tree (CART)...throw the kitchen sink at it...:)
+# library(rpart)
+# library(rpart.plot)
 # ?rpart
 
+# Get data into the right format:
 forTraining_IBU_rtree <- merged[-missingIBUindex,] %>% 
-  select(ABV,Style,Brewery_name,State,IBU)
+  select(ABV,Style,Brewery_name,City,State,Ounces,IBU)
 
 forFilling_IBU_rtree <- merged[missingIBUindex,] %>% 
-  select(ABV,Style,Brewery_name,State,IBU)
+  select(ABV,Style,Brewery_name,City,State,Ounces,IBU)
 
-rtree <- rpart(IBU ~ ABV+Style+Brewery_name+State, 
-               data = forTraining_IBU_rtree,
+# set up train/test split
+set.seed(8)
+splitPerc = .75
+trainIndices = sample(1:dim(forTraining_IBU_rtree)[1],round(splitPerc * dim(forTraining_IBU_rtree)[1]))
+train = forTraining_IBU_rtree[trainIndices,]
+test = forTraining_IBU_rtree[-trainIndices,]
+
+# train the model
+rtree <- rpart(IBU ~ ABV+Style, 
+               data = train,
                method = "anova",
-               control = list(cp = 0, xval = 10))
-plotcp(rtree)
+               control = list(cp = 0.0001, xval = 1000))
 
-# prp(rtree) # visualize the tree
+plotcp(rtree) # visualize relative error by tree size
+# prp(rtree) # visualize the tree structure
 
-rtree.pred = predict(rtree, forTraining_IBU_rtree[,c(1,2,3,4)])
-rtree.sse = sum((rtree.pred - forTraining_IBU_rtree$IBU)^2)
-rtree.mse = mean((rtree.pred - forTraining_IBU_rtree$IBU)^2)
-rtree.rmse = sqrt(mean((rtree.pred - forTraining_IBU_rtree$IBU)^2))
+######
+# evaluate model performance
+rtree.pred = predict(rtree, test)
+rtree.sse = sum((rtree.pred - test$IBU)^2)
+rtree.mse = mean((rtree.pred - test$IBU)^2)
+rtree.rmse = sqrt(mean((rtree.pred - test$IBU)^2))
 rtree.sse
 rtree.mse
 rtree.rmse
 
-plot(rtree.pred,forTraining_IBU_rtree$IBU)
-# hmmmm, try to repeat with a train/test split
-rtree.pred = predict(rtree, forFilling_IBU_rtree[,c(1,2,3,4)])
-rtree.sse = sum((rtree.pred - test$MEDV)^2)
-rtree.sse
+test$predictions <- rtree.pred
 
+test %>% ggplot(aes(x=IBU, y=predictions)) +
+  geom_point(col='navyblue') +
+  geom_smooth(method='lm', col="darkgrey") +
+  labs(title='Regression Tree Model Performance', x="Actual IBU", y="Predicted IBU")
+######
+
+### sanity check before updating the "merged" data frame
+# merged$IBU[missingIBUindex[1]]
+# merged$IBU[missingIBUindex[2]]
+# predict(rtree, forFilling_IBU_rtree[1,])
+# predict(rtree, forFilling_IBU_rtree[2,])
+
+merged$IBU[missingIBUindex] <- predict(rtree, forFilling_IBU_rtree)
+
+### complete the sanity check:
+# merged$IBU[missingIBUindex[1]]
+# merged$IBU[missingIBUindex[2]]
 ```
 
