@@ -19,13 +19,16 @@ Compute the Median alcohol content for all the beers in each state
 abv_df <- merged %>% drop_na(ABV) %>% group_by(State) %>% summarize(median_abv = median(ABV)) 
 
 # plot
-abv_df %>% ggplot(aes(x=State,y=median_abv)) + geom_col() + ggtitle('Median ABV by state')
+abv_df %>% ggplot(aes(x=State,y=median_abv)) + geom_col() + ggtitle('Median ABV by state') +
+  theme(axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) #+ ylim(0.02,0.07)
 
 # order by median ABV
 abv_df$State <- factor(abv_df$State,level=abv_df$State[order(abv_df$median_abv,decreasing=TRUE)])
 
 # ..and replot
-abv_df %>% ggplot(aes(x=State,y=median_abv)) + geom_col() + ggtitle('Median ABV by state')
+abv_df %>% ggplot(aes(x=State,y=median_abv)) + geom_col() + ggtitle('Median ABV by state') +
+  theme(axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) #+ ylim(0.02,0.07)
+
 
 # change up a bit to make a map [Sorry about that, Richard. If I would have been thinking a little more strategically, I would have set up the mapping bits to be a little more user friendly. - Steve]
 abv_df$State <- str_trim(abv_df$State, "left")
@@ -50,13 +53,15 @@ Median Bitterness unit for all the beers in each state
 ibu_df <- merged %>% drop_na(IBU) %>% group_by(State) %>% summarize(median_ibu = median(IBU)) 
 
 # plot
-ibu_df %>% ggplot(aes(x=State,y=median_ibu)) + geom_col() + ggtitle('Median IBU by state')
+ibu_df %>% ggplot(aes(x=State,y=median_ibu)) + geom_col() + ggtitle('Median IBU by state') +
+  theme(axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) #+ ylim(10,65)
 
 # order by median IBU
 ibu_df$State <- factor(ibu_df$State,level=ibu_df$State[order(ibu_df$median_ibu,decreasing=TRUE)])
 
 # ..and replot
-ibu_df %>% ggplot(aes(x=State,y=median_ibu)) + geom_col() + ggtitle('Median IBU by state')
+ibu_df %>% ggplot(aes(x=State,y=median_ibu)) + geom_col() + ggtitle('Median IBU by state') +
+  theme(axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) # + ylim(10,65)
 
 # change a bit to make a map
 ibu_df$State <- str_trim(ibu_df$State, "left")
