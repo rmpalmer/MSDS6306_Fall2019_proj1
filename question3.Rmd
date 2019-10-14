@@ -17,7 +17,6 @@ Data Exploration:
 ########################################################################
 # Data Exploration
 ########################################################################
-
 n_cols = dim(merged)[2]
 for (i in 1:n_cols)
 {
@@ -39,17 +38,19 @@ Fill ABV missing values:
 # Fill ABV missing values
 ########################################################################
 
-# Find the style of each beer with a missing value, calculate the median ABV for that style of beer, and fill the missing value with the median for that style. Filled IBU values are placed directly back into the "merged" dataset.
+# Find the style of each beer with a missing value, calculate the median ABV for that style of beer, and fill the missing value with the median for that style. Filled IBU values are placed into the "merged" dataset as merged$IBUfill.
+merged$ABVfill <- merged$ABV
 for (i in 1:length(missingABVindex))
 {
-  merged$ABV[missingABVindex[i]] <- median(merged$ABV[merged$Style == merged$Style[missingABVindex[i]]],na.rm = TRUE)
+  merged$ABVfill[missingABVindex[i]] <- median(merged$ABV[merged$Style == merged$Style[missingABVindex[i]]],na.rm = TRUE)
 }
 
 # sanity check to make sure that we filled all of the missing values:
-which(is.na(merged$ABV)) # looks like all values were filled...we are good to proceed
+which(is.na(merged$ABV))
+which(is.na(merged$ABVfill)) # looks like all values were filled...we are good to proceed
 ```
 
-Fill IBU missing values: ***note that I use "set.seed(8)" to ensure that the model predictions are always the same. My understand is that this consistency should ensure that any downstream dependency shouldn't break. (?)
+Fill IBU missing values: ***note that I use "set.seed(8)" to ensure that the model predictions are always the same. My understand is that this consistency should ensure that any downstream dependency shouldn't break. Filled IBU values are placed in the merged data frame as merged$IBUfill.
 ```{r}
 ########################################################################
 # Fill IBU missing values
@@ -106,7 +107,8 @@ test %>% ggplot(aes(x=IBU, y=predictions)) +
 # predict(rtree, forFilling_IBU_rtree[1,])
 # predict(rtree, forFilling_IBU_rtree[2,])
 
-merged$IBU[missingIBUindex] <- predict(rtree, forFilling_IBU_rtree)
+merged$IBUfill <- merged$IBU
+merged$IBUfill[missingIBUindex] <- predict(rtree, forFilling_IBU_rtree)
 
 ### complete the sanity check:
 # merged$IBU[missingIBUindex[1]]
