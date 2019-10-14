@@ -14,6 +14,24 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
+```{r}
+beer_count <- nrow(beers_raw)
+brewery_count <- nrow(breweries_raw)
+style_count <- nlevels(beers_raw$Style)
+```
+
+We were presented with data on `r beer_count` beers produced by `r brewery_count` breweries in the United States.
+
+For each brewery, we have its Name, and the city and state it is located in.
+
+For each beer, we have its style as well as numeric values for ABV (alcohol by volume),
+IBU (international bitterness units), and the serving size in ounces.
+
+In this dataset, there were `r style_count` different styles of beer represented.
+
+There were beers produced in every state of the nation, as well as in the District of Columbia.
+
+
 ```{r child = 'question1.Rmd'}
 ```
 
