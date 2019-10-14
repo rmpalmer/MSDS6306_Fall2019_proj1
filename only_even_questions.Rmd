@@ -15,14 +15,14 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Introduction
 
 
-#```{r child = 'question2.Rmd'}
-#```
+```{r child = 'question2.Rmd'}
+```
 
-#```{r child = 'question4.Rmd'}
-#```
+```{r child = 'question4.Rmd'}
+```
 
-#```{r child = 'question6.Rmd'}
-#```
+```{r child = 'question6.Rmd'}
+```
 
 ```{r child = 'question8.Rmd'}
 ```

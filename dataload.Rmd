@@ -5,7 +5,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r dataload, include=FALSE}
+```{r dataload, include=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(usmap)
