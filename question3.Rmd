@@ -8,6 +8,8 @@ summary: "We found that IBU and ABV were the only features with missing values. 
 
 ```{r question3, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+library(rpart)
+library(rpart.plot)
 ```
 
 # Question 3: Address the missing values in each column.
@@ -56,8 +58,6 @@ Fill IBU missing values: ***note that I use "set.seed(8)" to ensure that the mod
 # Fill IBU missing values
 ########################################################################
 # Let's try a regression tree (CART)...throw the kitchen sink at it...:)
-# library(rpart)
-# library(rpart.plot)
 # ?rpart
 
 # Get data into the right format:
