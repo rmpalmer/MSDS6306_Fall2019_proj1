@@ -4,7 +4,7 @@ output: html_document
 ---
 
 ```{r question8, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(class)
 library(caret)
@@ -21,10 +21,12 @@ beers_categorized <- beers_raw %>%
   mutate(is_ale = grepl("\\bale\\b",Style,ignore.case = TRUE)) %>%
   mutate(is_other_ale = (is_ale & !is_ipa))
 
+# keep only the ales
+only_ales <- beers_categorized %>% filter(is_ipa | is_other_ale)
+
 # can only work with beers that have valid values,
-# and we only care about ipa and other ales
 # and make a factor for the type
-for_knn <- beers_categorized %>% drop_na(ABV,IBU) %>%
+for_knn <- only_ales %>% drop_na(ABV,IBU) %>%
   filter(is_ipa | is_other_ale) %>%
   mutate(category = as.factor(ifelse(is_ipa,'IPA','Other'))) %>%
   mutate(abv_z = scale(ABV), ibu_z = scale(IBU)) %>%
@@ -33,7 +35,29 @@ for_knn <- beers_categorized %>% drop_na(ABV,IBU) %>%
 # columns to use for predictors
 knn_pred_indices = c("abv_z","ibu_z")                                                
 
+# counts
+total_count <- nrow(beers_raw)
+ipa_count <- only_ales %>% filter(is_ipa) %>% nrow()
+other_count <- only_ales %>% filter(is_other_ale) %>% nrow()
+ale_count <- ipa_count + other_count
+
+# how many observations were dropped for missing ABV or IBU
+drop_count <- nrow(only_ales) - nrow(for_knn)
+
+# percentages after dropping na
+valid_ipa_count   <- for_knn %>% filter(category == 'IPA') %>% nrow()
+valid_other_count <- for_knn %>% filter(category == 'Other') %>% nrow()
+valid_ipa_percent <- 100 * valid_ipa_count / (valid_other_count + valid_ipa_count)
+valid_other_percent <- 100 *valid_other_count / (valid_other_count + valid_ipa_count)
 ```
+
+Out of a total of `r total_count` beers, `r ipa_count` are IPA and `r other_count` are other ales.
+
+Of these `r ipa_count + other_count` ales, `r drop_count` are excluded from the following analysis
+because of missing either ABV or IBU values.
+
+After dropping observations missing either ABV or IBU,
+`r valid_ipa_percent`% of ales are IPA and `r valid_other_percent`% are other (not IPA).
 
 Make a scatter plot of IBU vs ABV, with only IPA's and other ales
 ```{r}
@@ -43,6 +67,8 @@ for_knn %>% ggplot(aes(x=IBU,y=ABV,color=category)) +
 
 Do KNN classification
 ```{r}
+# for repeatability
+set.seed(42)
 splitPerc <- .7
 iterations <- 50
 numks <- 50
