@@ -3,7 +3,7 @@ title: "question3"
 author: "Steven Garrity"
 date: "10/9/2019"
 output: html_document
-summary: "We found that IBU and ABV were the only features with missing values. ABV had XX NAs and IBU had 1005 NAs. All of the ABV NAs also had NA IBU. We chose to fill ABV values with the median ABV from beers of the same type. To fill missing values in IBU, we fit a regression tree to observations without missing values and then used that model to predict each missing IBU value."
+summary: "We found that IBU and ABV were the only features with missing values. ABV had 62 NAs and IBU had 1005 NAs. All of the ABV NAs also had NA IBU. We decided to fill ABV values with the median ABV from beers of the same type. To fill missing values in IBU, we fit a regression tree to observations without missing values and then used that model to predict each missing IBU value. Filled values are returned in the merged dataframe as merged$ABVfill and merged$IBUfill."
 ---
 
 ```{r question3, include=FALSE}
