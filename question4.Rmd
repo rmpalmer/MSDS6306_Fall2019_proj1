@@ -27,7 +27,7 @@ abv_df$State <- factor(abv_df$State,level=abv_df$State[order(abv_df$median_abv,d
 # ..and replot
 abv_df %>% ggplot(aes(x=State,y=median_abv)) + geom_col() + ggtitle('Median ABV by state')
 
-# change up a bit to make a map
+# change up a bit to make a map [Sorry about that, Richard. If I would have been thinking a little more strategically, I would have set up the mapping bits to be a little more user friendly. - Steve]
 abv_df$State <- str_trim(abv_df$State, "left")
 
 colnames(abv_df)[1] = "abbr"
