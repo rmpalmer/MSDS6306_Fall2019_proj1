@@ -151,20 +151,22 @@ First check normality
 
 ```{r}
 for_knn %>% ggplot(aes(x=ABV)) +
-  geom_histogram(aes(y=..density..,fill=category),show.legend = FALSE,bins=21) +
-  facet_grid(category~.) +
+  geom_histogram(aes(color=category,fill=category),
+                 position="identity",alpha=0.4,
+                 show.legend = TRUE,bins=21) +
   ggtitle('histogram of ABV by category') +
-  scale_color_manual(breaks = c("IPA", "Other"),
-                        values=c("#C8102E", "#13294b"))
+  scale_color_manual(values=c("#C8102E", "#13294b")) +
+  scale_fill_manual(values=c("#C8102E", "#13294b"))
 ```
 
 ```{r}
 for_knn %>% ggplot(aes(x=IBU)) +
-  geom_histogram(aes(y=..density..,fill=category),show.legend = FALSE,bins=21) +
-  facet_grid(category~.) +
+  geom_histogram(aes(color=category,fill=category),
+                 position="identity",alpha=0.4,
+                 show.legend = TRUE,bins=21) +
   ggtitle('histogram of IBU by category') +
-  scale_color_manual(breaks = c("IPA", "Other"),
-                        values=c("#C8102E", "#13294b"))
+  scale_color_manual(values=c("#C8102E", "#13294b")) +
+  scale_fill_manual(values=c("#C8102E", "#13294b"))
 ```
 
 ```{r}
