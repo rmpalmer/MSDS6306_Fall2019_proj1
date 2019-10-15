@@ -1,6 +1,8 @@
 ---
 title: "question7"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r question7, include=FALSE}
@@ -11,4 +13,13 @@ library(tidyverse)
 # Question 7
 Scatterplot of bitterness versus alcoholic content.
 ```{r}
+
+ibu_v_abv <- lm(merged$ABVfill~merged$IBUfill)
+summary(ibu_v_abv)
+
+merged %>% ggplot(aes(x=IBUfill, y=ABVfill)) +
+  geom_point(col="#13294b") +
+  geom_text(x=125, y=0.01, label="R2 = 0.42") +
+  geom_smooth(method='lm', col="#c8102e") +
+  labs(title='IBU v ABV', x='IBU', y='ABV')
 ```
