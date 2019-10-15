@@ -53,6 +53,7 @@ abv_df %>% ggplot(aes(x=State,y=median_abv)) + geom_col() +
 
 abv_df %>% ggplot(aes(x=State,y=median_abvfill)) + geom_col() + 
   ggtitle('Median ABV by state (missing values inferred)') +
+  coord_fixed(ratio=0.2) + 
   theme(axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) +
   coord_cartesian(ylim=c(0.03,0.07))
 

@@ -13,6 +13,8 @@ Comment on the summary statistics and distribution of the ABV variable.
 ```{r}
 summary(merged$ABV)
 summary(merged$ABVfill)
+sd(merged$ABV,na.rm=TRUE)
+sd(merged$ABVfill)
 ```
 
 The mean is slightly higher than the median, which would indicate a right skewed distribution,
@@ -21,7 +23,7 @@ one with a long tail of high values.
 ```{r}
 merged %>% drop_na(ABV) %>%
   ggplot(aes(x=ABV)) + geom_histogram(aes(y=..density..),bins=27) + 
-  ggtitle('Histogram of ABV values (no infilling)') +
+  ggtitle('Histogram and density estimate of ABV values (no infilling)') +
   geom_vline(aes(xintercept=median(ABV)),color='blue',linetype='dashed',size=1) +
   geom_text(mapping=aes(x=median(ABV),y=40,label="median"),
             color="blue",angle=90,vjust=-0.4,show.legend=FALSE) +
@@ -34,7 +36,7 @@ merged %>% drop_na(ABV) %>%
 ```{r}
 merged %>% 
   ggplot(aes(x=ABVfill)) + geom_histogram(aes(y=..density..),bins=27) + 
-  ggtitle('Histogram of ABV values (missing values inferred)') +
+  ggtitle('Histogram and density estimate of ABV values (missing values inferred)') +
   geom_vline(aes(xintercept=median(ABVfill)),color='blue',linetype='dashed',size=1) +
   geom_text(mapping=aes(x=median(ABVfill),y=40,label="median"),
             color="blue",angle=90,vjust=-0.4,show.legend=FALSE) +
