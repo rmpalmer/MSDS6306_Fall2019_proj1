@@ -1,18 +1,131 @@
 ---
 title: "question5"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r question5, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
 ```
 
 # Question 5
 Which state has the maximum alcoholic beer?
 ```{r}
+#run twice: 1) with missing values, 2) without missing values
+
+maxABVnofill <- merged %>% 
+  group_by(State) %>% 
+  summarize(maxABV = max(ABV, na.rm = TRUE)) %>% 
+  arrange(desc(maxABV))
+
+maxABVfill <- merged %>% 
+  group_by(State) %>% 
+  summarize(maxABV = max(ABVfill)) %>% 
+  arrange(desc(maxABV))
+
+# no difference in the top 10 states when using ABV vs ABVfill
+
+#########################################
+# try a diverging bar chart
+theme_set(theme_bw())  
+
+# Data Prep for ABV
+maxABVfill$maxABV_z <- round((maxABVfill$maxABV - mean(maxABVfill$maxABV))/
+                               sd(maxABVfill$maxABV), 2)  # compute normalized mpg
+maxABVfill$maxABV_type <- ifelse(maxABVfill$maxABV_z < 0, "below", "above")  # above / below avg flag
+maxABVfill <- maxABVfill[order(maxABVfill$maxABV_z), ]  # sort
+maxABVfill$State <- factor(maxABVfill$State, levels = maxABVfill$State)  # convert to factor to retain sorted order in plot.
+
+# search for budweiser products and highlight them on the graph
+
+# Diverging Barcharts
+ggplot(maxABVfill, aes(x=State, y=maxABV_z, label=maxABV_type)) + 
+  geom_bar(stat='identity', aes(fill=maxABV_type), width=.5)  +
+  scale_fill_manual(name="Maximum ABV", 
+                    labels = c("Above Average", "Below Average"), 
+                    values = c("above"="#13294b", "below"="#b1b3b3")) + 
+  labs(title= "Normalized maximum ABV by State", y="maximum ABV z-score", x="") + 
+  coord_flip()
+
+maxABVfill %>% filter(State == " CO" | State == " KY" | State == " IN" | State == " NY" | State == " WI") %>% ggplot(aes(x=State, y=maxABV)) + 
+  geom_bar(stat='identity', fill = "#13294b", width=.9)  + 
+  coord_flip() +
+  geom_text(aes(label=maxABV), position=position_dodge(width=0.9), hjust=+1.25, col="white") +
+  labs(title= "States with the Highest ABV", x="", y="ABV") 
 ```
 
 Which state has the most bitter beer?
 ```{r}
+#run twice: 1) with missing values, 2) without missing values
+maxIBUfill <- merged %>% 
+  group_by(State) %>% 
+  summarize(maxIBU = max(IBUfill)) %>% 
+  arrange(desc(maxIBU))
+
+# no difference in the top 10 states when using ABV vs ABVfill
+
+#########################################
+# try a diverging bar chart
+theme_set(theme_bw())  
+
+# Data Prep for ABV
+maxIBUfill$maxIBU_z <- round((maxIBUfill$maxIBU - mean(maxIBUfill$maxIBU))/
+                               sd(maxIBUfill$maxIBU), 2)  # compute normalized mpg
+maxIBUfill$maxIBU_type <- ifelse(maxIBUfill$maxIBU_z < 0, "below", "above")  # above / below avg flag
+maxIBUfill <- maxIBUfill[order(maxIBUfill$maxIBU_z), ]  # sort
+maxIBUfill$State <- factor(maxIBUfill$State, levels = maxIBUfill$State)  # convert to factor to retain sorted order in plot.
+
+# search for budweiser products and highlight them on the graph
+
+# Diverging Barcharts
+ggplot(maxIBUfill, aes(x=State, y=maxIBU_z, label=maxIBU_type)) + 
+  geom_bar(stat='identity', aes(fill=maxIBU_type), width=.5)  +
+  scale_fill_manual(name="Maximum IBU", 
+                    labels = c("Above Average", "Below Average"), 
+                    values = c("above"="#C8102E", "below"="#b1b3b3")) + 
+  labs(title= "Normalized maximum IBU by State", y="maximum IBU z-score", x="") + 
+  coord_flip()
+
+maxIBUfill %>% filter(State == " OR" | State == " VA" | State == " MA" | State == " OH" | State == " VT") %>% ggplot(aes(x=State, y=maxIBU)) + 
+  geom_bar(stat='identity', fill = "#C8102E", width=.9)  + 
+  coord_flip() +
+  geom_text(aes(label=maxIBU), position=position_dodge(width=0.9), hjust=+1.25, col="white") +
+  labs(title= "States with the Highest IBU", x="", y="IBU") 
+```
+
+In case we want to map:
+```{r}
+#########################################
+
+# # lets do some mapping
+# states_and_dc <- tibble(state = state.name) %>%
+#    bind_cols(tibble(abbr = state.abb)) %>% 
+#    bind_rows(tibble(state = "District of Columbia", abbr = "DC"))
+# 
+# maxABVfill$State <- str_trim(maxABVfill$State, "left")
+# colnames(maxABVfill)[1] = "abbr"
+# maxABVfill$abbr <- as.character(maxABVfill$abbr)
+# 
+# maxabv_bystate_tomap <- merge(maxABVfill, states_and_dc, by="abbr")
+# maxabv_bystate_tomap$maxABVrank <- c(seq(10,1),seq(40,1))
+# 
+# quants <- as.numeric(quantile(maxabv_bystate_tomap$maxABV, c(.1,.2,.3,.4,.5,.6,.7,.8,.9,.99,1)))
+# quant_labels <- c("10th","20th","30th","40","50","60","70","80","90","99")
+
+# maxabv_bystate_tomap$quant <- maxabv_bystate_tomap$maxABV
+# for (i in 1:length(quants))
+# {
+#   maxabv_bystate_tomap$quant[(maxabv_bystate_tomap$maxABV > quants[i])] = quants[i]
+# }
+# 
+# library(usmap)
+# library(ggthemes)
+# 
+# plot_usmap(regions = c("states"), data = maxabv_bystate_tomap,
+#   values = "quant", theme = theme_map(), labels = FALSE,
+#   label_color = "black") +
+#   scale_fill_continuous(name = "maximum ABV", low="ivory", high="red2") +
+#   theme(legend.position="right") +
+#   labs(title = 'max ABV quantiles')
 ```
