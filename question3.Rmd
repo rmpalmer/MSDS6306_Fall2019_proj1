@@ -37,6 +37,10 @@ Fill ABV missing values:
 ########################################################################
 # Fill ABV missing values
 ########################################################################
+merged %>% ggplot(aes(x=Style, y=ABV)) +
+  geom_boxplot(fill ="#13294b", alpha=0.3) +
+  theme(axis.text.x = element_text(angle = 90, hjust=1)) +
+  labs(title="Boxplots of ABV by Beer Style", x="", y="ABV")
 
 # Find the style of each beer with a missing value, calculate the median ABV for that style of beer, and fill the missing value with the median for that style. Filled IBU values are placed into the "merged" dataset as merged$IBUfill.
 merged$ABVfill <- merged$ABV
@@ -56,8 +60,9 @@ Fill IBU missing values: ***note that I use "set.seed(8)" to ensure that the mod
 # Fill IBU missing values
 ########################################################################
 # Let's try a regression tree (CART)...throw the kitchen sink at it...:)
-# library(rpart)
-# library(rpart.plot)
+# If I get some time, I'd like to tree a bagging algorithm: http://uc-r.github.io/regression_trees
+library(rpart)
+library(rpart.plot)
 # ?rpart
 
 # Get data into the right format:
@@ -96,8 +101,10 @@ rtree.rmse
 test$predictions <- rtree.pred
 
 test %>% ggplot(aes(x=IBU, y=predictions)) +
-  geom_point(col='navyblue') +
-  geom_smooth(method='lm', col="darkgrey") +
+  geom_point(col="#13294b") +
+  geom_text(x=25, y=110, label="RMSE = 13.1") +
+  geom_text(x=20, y = 100, label='R2 = 0.75') +
+  geom_smooth(method='lm', col="#c8102e") +
   labs(title='Regression Tree Model Performance', x="Actual IBU", y="Predicted IBU")
 ######
 
