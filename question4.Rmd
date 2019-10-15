@@ -48,13 +48,13 @@ abv_df$State <- factor(abv_df$State,level=abv_df$State[order(abv_df$median_abvfi
 abv_df %>% ggplot(aes(x=State,y=median_abv)) + geom_col() + 
   ggtitle('Median ABV by state (missing values dropped)') +
   ylab('Median ABV value') +
-  theme(axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) +
+  theme(aspect.ratio=0.2,axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) +
   coord_cartesian(ylim=c(0.03,0.07))
 
 abv_df %>% ggplot(aes(x=State,y=median_abvfill)) + geom_col() + 
   ggtitle('Median ABV by state (missing values inferred)') +
-  coord_fixed(ratio=0.2) + 
-  theme(axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) +
+  ylab('Median ABV value') + 
+  theme(aspect.ratio=0.2,axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) +
   coord_cartesian(ylim=c(0.03,0.07))
 
 # change up a bit to make a map [Sorry about that, Richard. If I would have been thinking a little more strategically, I would have set up the mapping bits to be a little more user friendly. - Steve]
@@ -109,13 +109,13 @@ ibu_df$State <- factor(ibu_df$State,level=ibu_df$State[order(ibu_df$median_ibufi
 ibu_df %>% ggplot(aes(x=State,y=median_ibu)) + geom_col() + 
   ggtitle('Median IBU by State (missing values dropped)') +
   ylab('Median IBU value') + 
-  theme(axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) + 
+  theme(aspect.ratio=0.2,axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) + 
   coord_cartesian(ylim=c(10,65))
 
 ibu_df %>% ggplot(aes(x=State,y=median_ibufill)) + geom_col() + 
   ggtitle('Median IBU by State (missing values inferred)') +
   ylab('Median IBU value') + 
-  theme(axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) + 
+  theme(aspect.ratio=0.2,axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) + 
   coord_cartesian(ylim=c(10,65))
 
 # change a bit to make a map
@@ -129,7 +129,7 @@ ibu_by_state_tomap <- merge(ibu_df, states_and_dc, by="abbr")
 plot_usmap(regions = c("states"), data = ibu_by_state_tomap,
   values = "median_ibufill", theme = theme_map(), labels = FALSE,
   label_color = "black") +
-  scale_fill_continuous(name = "ABV", low="ivory", high="red2") +
+  scale_fill_continuous(name = "IBU", low="ivory", high="red2") +
   theme(legend.position="right") +
   labs(title = 'Median IBU of beers by state')
 ```
