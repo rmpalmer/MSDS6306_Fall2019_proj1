@@ -14,30 +14,40 @@ library(ggthemes)
 
 # Question 4
 Compute the Median alcohol content for all the beers in each state
+and summarize.
 ```{r}
-# drop any observations without valid ABV values, group by state, and compute the median
-abv_df <- merged %>% drop_na(ABV) %>% group_by(State) %>% 
-  summarize(median_abv = median(ABV), median_abvfill = median(ABVfill)) 
+# group by state and compute median of original values (dropping NA)
+# and of infilled values
+abv_df <- merged %>% group_by(State) %>% 
+  summarize(median_abv = median(ABV,na.rm=TRUE), median_abvfill = median(ABVfill)) 
+```
 
+Check to see if the median ABV is affected by infilling
+```{r}
 # sanity check - range of values
 summary(abv_df$median_abv)
 summary(abv_df$median_abvfill)
 
 # See if the median ABV is changed by infilling
-abv_df %>% mutate(compare_abv = median_abv - median_abvfill) %>% 
+abv_df %>% 
+  drop_na() %>%
+  mutate(compare_abv = median_abv - median_abvfill) %>% 
   select(compare_abv) %>% summary()
+```
 
+```{r}
 # plot - not that interesting when in alphabetic sort
-#abv_df %>% ggplot(aes(x=State,y=median_abv)) + geom_col() + ggtitle('Median ABV by state') +
+#abv_df %>% ggplot(aes(x=State,y=median_abv)) + geom_col() + ggtitle('Median ABV by State') +
 #  theme(axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) +
 #  coord_cartesian(ylim=c(0.03,0.07))
 
 # order by median ABV
-abv_df$State <- factor(abv_df$State,level=abv_df$State[order(abv_df$median_abv,decreasing=TRUE)])
+abv_df$State <- factor(abv_df$State,level=abv_df$State[order(abv_df$median_abvfill,decreasing=TRUE)])
 
 # ..and replot
 abv_df %>% ggplot(aes(x=State,y=median_abv)) + geom_col() + 
   ggtitle('Median ABV by state (missing values dropped)') +
+  ylab('Median ABV value') +
   theme(axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) +
   coord_cartesian(ylim=c(0.03,0.07))
 
@@ -55,7 +65,7 @@ abv_df$abbr <- as.character(abv_df$abbr)
 abv_by_state_tomap <- merge(abv_df, states_and_dc, by="abbr")
 
 plot_usmap(regions = c("states"), data = abv_by_state_tomap,
-  values = "median_abv", theme = theme_map(), labels = FALSE,
+  values = "median_abvfill", theme = theme_map(), labels = FALSE,
   label_color = "black") +
   scale_fill_continuous(name = "ABV", low="ivory", high="red2") +
   theme(legend.position="right") +
@@ -63,30 +73,47 @@ plot_usmap(regions = c("states"), data = abv_by_state_tomap,
 
 ```
 
-Median Bitterness unit for all the beers in each state
+Median Bitterness unit for all the beers in each state and summarize
 ```{r}
-# drop any obsvervations without valid IBU values, roup by state, and compute the median
-ibu_df <- merged %>% drop_na(IBU) %>% group_by(State) %>% 
-  summarize(median_ibu = median(IBU), median_ibufill = median(IBUfill)) 
+# group by state and compute median of original values (dropping na)
+# and of infilled data.
+ibu_df <- merged %>% group_by(State) %>% 
+  summarize(median_ibu = median(IBU,na.rm=TRUE), median_ibufill = median(IBUfill)) 
+```
 
+See if the Median IBU value by state was affected by infilling
+```{r}
 # sanity check - range of values
 summary(ibu_df$median_ibu)
 summary(ibu_df$median_ibufill)
 
 # check to see if IBU values are changed by infilling
-ibu_df %>% mutate(compare_ibu = median_ibu - median_ibufill) %>% summary()
+ibu_df %>% 
+  drop_na() %>%
+  mutate(compare_ibu = median_ibu - median_ibufill) %>% 
+  select(compare_ibu) %>%
+  summary()
+```
 
-
+```{r}
 # plot - not that interesting
 #ibu_df %>% ggplot(aes(x=State,y=median_ibu)) + geom_col() + ggtitle('Median IBU by state') +
 #  theme(axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) +
 #  coord_cartesian(ylim=c(10,65))
 
 # order by median IBU
-ibu_df$State <- factor(ibu_df$State,level=ibu_df$State[order(ibu_df$median_ibu,decreasing=TRUE)])
+ibu_df$State <- factor(ibu_df$State,level=ibu_df$State[order(ibu_df$median_ibufill,decreasing=TRUE)])
 
 # ..and replot
-ibu_df %>% ggplot(aes(x=State,y=median_ibu)) + geom_col() + ggtitle('Median IBU by state') +
+ibu_df %>% ggplot(aes(x=State,y=median_ibu)) + geom_col() + 
+  ggtitle('Median IBU by State (missing values dropped)') +
+  ylab('Median IBU value') + 
+  theme(axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) + 
+  coord_cartesian(ylim=c(10,65))
+
+ibu_df %>% ggplot(aes(x=State,y=median_ibufill)) + geom_col() + 
+  ggtitle('Median IBU by State (missing values inferred)') +
+  ylab('Median IBU value') + 
   theme(axis.text.x = element_text(size = 5, angle = 0, hjust = 0, vjust = 0, face = "plain")) + 
   coord_cartesian(ylim=c(10,65))
 
@@ -99,11 +126,11 @@ ibu_df$abbr <- as.character(ibu_df$abbr)
 ibu_by_state_tomap <- merge(ibu_df, states_and_dc, by="abbr")
 
 plot_usmap(regions = c("states"), data = ibu_by_state_tomap,
-  values = "median_ibu", theme = theme_map(), labels = FALSE,
+  values = "median_ibufill", theme = theme_map(), labels = FALSE,
   label_color = "black") +
   scale_fill_continuous(name = "ABV", low="ivory", high="red2") +
   theme(legend.position="right") +
-  labs(title = 'Median ABV of beers by state')
+  labs(title = 'Median IBU of beers by state')
 ```
 
 
