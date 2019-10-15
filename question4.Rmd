@@ -38,7 +38,7 @@ abv_by_state_tomap <- merge(abv_df, states_and_dc, by="abbr")
 plot_usmap(regions = c("states"), data = abv_by_state_tomap,
   values = "median_abv", theme = theme_map(), labels = FALSE,
   label_color = "black") +
-  scale_fill_continuous(name = "ABV", low="ivory", high="red2") +
+  scale_fill_continuous(name = "ABV", low="ivory", high="#c8102e") +
   theme(legend.position="right") +
   labs(title = 'Median ABV of beers by state')
 
@@ -69,7 +69,7 @@ ibu_by_state_tomap <- merge(ibu_df, states_and_dc, by="abbr")
 plot_usmap(regions = c("states"), data = ibu_by_state_tomap,
   values = "median_ibu", theme = theme_map(), labels = FALSE,
   label_color = "black") +
-  scale_fill_continuous(name = "ABV", low="ivory", high="red2") +
+  scale_fill_continuous(name = "ABV", low="ivory", high="#13294b") +
   theme(legend.position="right") +
   labs(title = 'Median ABV of beers by state')
 ```
