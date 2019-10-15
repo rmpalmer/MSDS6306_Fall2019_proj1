@@ -19,13 +19,13 @@ library(ggthemes)
 ```{r}
 breweries_by_state <- breweries_raw %>%  group_by(State) %>% summarize(count = n())
 
-# simple column chart (kind of lame)
+# simple column chart
 breweries_by_state %>% ggplot(aes(x=reorder(State, -count), y=count)) +
   geom_col() +
-  labs(title = "Breweries by State", y="Number of Breweries")
+  labs(title = "Breweries by State", y="Number of Breweries", x="")
 ```
 
-# It would be a lot more interesting to have a map visualization
+# It would be more interesting to have a map visualization
 ```{r}
 # library(maps)
 states <- map_data("state")
@@ -38,7 +38,7 @@ states_and_dc <- tibble(state = state.name) %>%
 # found an empty white space in the state abbreviation data. Remove it first:
 breweries_by_state$State <- str_trim(breweries_by_state$State, "left")
 
-# need to match the column name for later merge:
+# need to match the column name.
 colnames(breweries_by_state)[1] = "abbr"
 
 # This appears to be necessary, but I'm not 100% certain why:
@@ -50,13 +50,13 @@ breweries_by_state_tomap <- merge(breweries_by_state_temp, statepop, by="abbr")
 breweries_by_state_tomap$perCapita <- breweries_by_state_tomap$count/(breweries_by_state_tomap$pop_2015/1000000)
 
 # library(usmap)
-# library(ggthemes)
+library(ggthemes)
 
 ### Map the total number of breweries in each state:
 plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
   values = "count", theme = theme_map(), labels = FALSE,
   label_color = "black") +
-  scale_fill_continuous(name = "n", low="ivory", high="red2") +
+  scale_fill_continuous(name = "n", low="ivory", high="#c8102e") +
   theme(legend.position="right") +
   labs(title = 'Number of Breweries in each state')
 
@@ -64,7 +64,7 @@ plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
 plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
   values = "perCapita", theme = theme_map(), labels = FALSE,
   label_color = "black") +
-  scale_fill_continuous(name = "n*", low="ivory", high="navyblue") +
+  scale_fill_continuous(name = "n*", low="ivory", high="#13294b") +
   theme(legend.position="right", 
         plot.caption = element_text(color="navyblue", size = 8, hjust=1)) +
   labs(title = 'Breweries per Capita', caption = "*breweries per 1,000,000 people")
