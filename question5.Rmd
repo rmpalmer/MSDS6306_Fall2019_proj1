@@ -7,6 +7,8 @@ editor_options:
 
 ```{r question5, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
 ```
 
 # Question 5
