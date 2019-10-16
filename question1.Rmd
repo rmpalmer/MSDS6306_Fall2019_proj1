@@ -19,10 +19,10 @@ library(ggthemes)
 ```{r}
 breweries_by_state <- breweries_raw %>%  group_by(State) %>% summarize(count = n())
 
-# simple column chart
-breweries_by_state %>% ggplot(aes(x=reorder(State, -count), y=count)) +
-  geom_col() +
-  labs(title = "Breweries by State", y="Number of Breweries", x="")
+# simple bar chart...# see below
+# breweries_by_state %>% ggplot(aes(x=reorder(State, -count), y=count)) +
+#   geom_col() +
+#   labs(title = "Breweries by State", y="Number of Breweries", x="")
 ```
 
 # It would be more interesting to have a map visualization
@@ -67,6 +67,22 @@ plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
   scale_fill_continuous(name = "n*", low="ivory", high="#13294b") +
   theme(legend.position="right", 
         plot.caption = element_text(color="navyblue", size = 8, hjust=1)) +
-  labs(title = 'Breweries per Capita', caption = "*breweries per 1,000,000 people")
+  labs(title = 'Breweries per Capita*', caption = "*per 1M people")
+```
+
+```{r}
+#bar charts
+library(grid)
+p1 <- breweries_by_state_tomap %>% ggplot(aes(x=reorder(abbr, -count), y=count)) +
+  geom_col(fill="#c8102e") +
+  labs(title = "Breweries per State", y="Number of Breweries", x="")
+
+p2 <- breweries_by_state_tomap %>% ggplot(aes(x=reorder(abbr, -perCapita), y=perCapita)) +
+  geom_col(fill="#13294b") +
+  labs(title = "Breweries per Capita* by State", 
+       y="Number of Breweries", x="", caption="*per 1M people")
+
+grid.newpage()
+grid.draw(rbind(ggplotGrob(p1), ggplotGrob(p2), size="last"))
 ```
 
