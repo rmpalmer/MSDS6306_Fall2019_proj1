@@ -66,13 +66,13 @@ ibu_df %>% ggplot(aes(x=State,y=median_ibu)) +
   geom_col(color="#13294b",fill="#C8102E") + 
   theme(aspect.ratio = 0.2,axis.text=element_text(size=4)) +
   ylab('Median IBU') + 
-  ggtitle('Median IBU by state (missing values dropped')
+  ggtitle('Median IBU by state (missing values dropped)')
 
 ibu_df %>% ggplot(aes(x=State,y=median_ibufill)) +
   geom_col(color="#13294b",fill="#C8102E") + 
   theme(aspect.ratio = 0.2,axis.text=element_text(size=4)) +
   ylab('Median IBU') + 
-  ggtitle('Median IBU by state (missing values infilled')
+  ggtitle('Median IBU by state (missing values infilled)')
 
 
 # change a bit to make a map

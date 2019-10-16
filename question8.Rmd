@@ -15,24 +15,30 @@ library(pracma)
 # Question 8
 Categorize Ales...
 ```{r}
-# categorize beers as ipa, or other ale
+# categorize beers as ipa, or other ale (still have orig columns as well as infilled)
 beers_categorized <- merged %>%
   mutate(is_ipa = grepl("\\bIPA\\b",Style,ignore.case = TRUE)) %>%
   mutate(is_ale = grepl("\\bale\\b",Style,ignore.case = TRUE)) %>%
-  mutate(is_other_ale = (is_ale & !is_ipa)) %>%
-  select(-IBU,-ABV) %>%
-  rename(IBU=IBUfill,ABV=ABVfill)
+  mutate(is_other_ale = (is_ale & !is_ipa)) 
 
 # keep only the ales
 only_ales <- beers_categorized %>% filter(is_ipa | is_other_ale)
 
-# can only work with beers that have valid values,
 # and make a factor for the type
+# here I replace orig columns with infilled columns.
 for_knn <- only_ales %>% 
   filter(is_ipa | is_other_ale) %>%
   mutate(category = as.factor(ifelse(is_ipa,'IPA','Other'))) %>%
+  select(-IBU,-ABV) %>%
+  rename(IBU=IBUfill,ABV=ABVfill) %>%
   mutate(abv_z = scale(ABV), ibu_z = scale(IBU)) %>%
   select(ABV,IBU,abv_z,ibu_z,category)
+
+# here I leave orig columns alone, but drop observations with missing values.
+for_orig_plot <- only_ales %>% 
+  filter(is_ipa | is_other_ale) %>%
+  mutate(category = as.factor(ifelse(is_ipa,'IPA','Other'))) %>%
+  drop_na(ABV,IBU)
 
 # columns to use for predictors
 knn_pred_indices = c("abv_z","ibu_z")                                                
@@ -56,8 +62,17 @@ Out of a total of `r total_count` beers, `r ipa_count` are IPA and `r other_coun
 
 Make a scatter plot of IBU vs ABV, with only IPA's and other ales
 ```{r}
+for_orig_plot %>% ggplot(aes(x=IBU,y=ABV,color=category)) + 
+  geom_point() + ggtitle('ABV vs IBU for IPAs and other ales (missing values dropped)') +
+  coord_cartesian(ylim = c(0.02,0.1),xlim=c(0,150)) +
+  scale_color_manual(breaks = c("IPA", "Other"),
+                        values=c("#C8102E", "#13294b"))
+```
+
+```{r}
 for_knn %>% ggplot(aes(x=IBU,y=ABV,color=category)) + 
-  geom_point() + ggtitle('ABV vs IBU for IPAs and other ales') +
+  geom_point() + ggtitle('ABV vs IBU for IPAs and other ales (infilled)') +
+  coord_cartesian(ylim = c(0.02,0.1),xlim=c(0,150)) +
   scale_color_manual(breaks = c("IPA", "Other"),
                         values=c("#C8102E", "#13294b"))
 ```
@@ -154,7 +169,7 @@ for_knn %>% ggplot(aes(x=ABV)) +
   geom_histogram(aes(color=category,fill=category),
                  position="identity",alpha=0.4,
                  show.legend = TRUE,bins=21) +
-  ggtitle('histogram of ABV by category') +
+  ggtitle('histogram of ABV by category (infilled)') +
   scale_color_manual(values=c("#C8102E", "#13294b")) +
   scale_fill_manual(values=c("#C8102E", "#13294b"))
 ```
@@ -164,7 +179,7 @@ for_knn %>% ggplot(aes(x=IBU)) +
   geom_histogram(aes(color=category,fill=category),
                  position="identity",alpha=0.4,
                  show.legend = TRUE,bins=21) +
-  ggtitle('histogram of IBU by category') +
+  ggtitle('histogram of IBU by category (infilled)') +
   scale_color_manual(values=c("#C8102E", "#13294b")) +
   scale_fill_manual(values=c("#C8102E", "#13294b"))
 ```
