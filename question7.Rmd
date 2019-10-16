@@ -8,6 +8,8 @@ editor_options:
 ```{r question7, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
+library(ggplot2)
+library(ggthemes)
 ```
 
 # Question 7
@@ -22,12 +24,12 @@ merged$IBUisfilled <- as.factor(merged$IBUisfilled)
 ibu_v_abv <- lm(merged$ABVfill~merged$IBUfill)
 summary(ibu_v_abv)
 
-merged %>% ggplot(aes(x=IBUfill, y=ABVfill)) +
+merged %>% ggplot(aes(x=IBUfill, y=ABVfill, color=IBUisfilled)) +
   geom_point() +
-  scale_color_manual(values=c("#13294b", "#c8102e")) +
-  geom_text(x=125, y=0.01, label="R2 = 0.42") +
+  scale_color_manual(breaks=c("not filled","filled"), values=c("#13294b", "#b1b3b3")) +
   geom_smooth(method='lm', col="#c8102e") +
-  labs(title='IBU v ABV', x='IBU', y='ABV')
+  labs(title='IBU v ABV', x='IBU', y='ABV', fill='IBU') +
+  theme_bw() + scale_shape_cleveland() 
 
 
 # now try with unfilled data
