@@ -9,6 +9,63 @@ library(tidyverse)
 ```
 
 # Question 9
-Knocking their socks off.
+Let's see where the established craft brew labels are, to find out where the
+competition is and where there may be opportunties to enter the market.
+
 ```{r}
+brew_count <- merged %>% group_by(Brew_ID) %>% summarise(count=n())
+breweries_w_variety_count <- inner_join(breweries_raw, brew_count,by='Brew_ID') 
+variety_by_state <- breweries_w_variety_count %>%  group_by(State) %>% summarize(max_varieties = max(count))
 ```
+
+```{r}
+# simple column chart
+variety_by_state %>% ggplot(aes(x=reorder(State, -max_varieties), y=max_varieties)) +
+  geom_col() +
+  labs(title = "Max Variety by State", y="Number of Varieties", x="")
+```
+
+```{r}
+# library(maps)
+states <- map_data("state")
+
+# add DC to embedded "state" dataset:
+states_and_dc <- tibble(state = state.name) %>%
+   bind_cols(tibble(abbr = state.abb)) %>% 
+   bind_rows(tibble(state = "District of Columbia", abb = "DC"))
+
+# found an empty white space in the state abbreviation data. Remove it first:
+variety_by_state$State <- str_trim(variety_by_state$State, "left")
+
+# need to match the column name.
+colnames(variety_by_state)[1] = "abbr"
+
+# This appears to be necessary, but I'm not 100% certain why:
+variety_by_state$abbr <- as.character(variety_by_state$abbr)
+
+# merge three dataframes: brewery count per state, state names and abbreviations, and state population data
+variety_by_state_temp <- merge(variety_by_state, states_and_dc, by="abbr")
+variety_by_state_tomap <- merge(variety_by_state_temp, statepop, by="abbr")
+
+# library(usmap)
+library(ggthemes)
+
+### Map the maximum number of varieties in each state:
+plot_usmap(regions = c("states"), data = variety_by_state_tomap,
+  values = "max_varieties", theme = theme_map(), labels = FALSE,
+  label_color = "black") +
+  scale_fill_continuous(name = "n", low="ivory", high="#c8102e") +
+  theme(legend.position="right") +
+  labs(title = 'Max number of varieties by state')
+
+
+```
+
+
+If we believe that competition would come from breweries that produce many labels,
+there would be competition in Michican, Indiana, and Colorado.
+On the other hand, there is potentially unserved market in the south and in 
+New England.  Combining this information with the map showing breweries per
+state and breweries per capita it seems that the south (Mississippi, Alabama,
+Georgia, South Carolina and North Carolina) would be a region with opportunities
+for growth.
