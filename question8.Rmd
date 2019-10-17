@@ -19,6 +19,8 @@ Categorize Ales...
 beers_categorized <- merged %>%
   mutate(is_ipa = grepl("\\bIPA\\b",Style,ignore.case = TRUE)) %>%
   mutate(is_ale = grepl("\\bale\\b",Style,ignore.case = TRUE)) %>%
+  mutate(is_american = grepl("\\bamerican\\b",Style,ignore.case = TRUE)) %>%
+  mutate(is_belgian = grepl("\\bbelgian\\b",Style,ignore.case = TRUE)) %>%
   mutate(is_other_ale = (is_ale & !is_ipa)) 
 
 # keep only the ales
