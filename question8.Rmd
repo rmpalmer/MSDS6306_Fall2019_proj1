@@ -54,13 +54,18 @@ ale_count <- ipa_count + other_count
 ale_percent   <- round(100 * ale_count / total_count)
 ipa_percent   <- round(100 * ipa_count / total_count)
 other_percent <- round(100 * other_count / total_count)
+ipa_percent_of_ales <- round(100 * ipa_count / ale_count)
+other_percent_of_ales <- round(100 * other_count / ale_count)
 ```
 
 Out of a total of `r total_count` beers, `r ipa_count` are IPA and `r other_count` are other ales.
 
-`r ale_percent` of beers are ales.
+`r ale_percent` % of beers are ales.
 
-`r ipa_percent` of beers are IPA.
+`r ipa_percent` % of beers are IPA.
+
+`r ipa_percent_of_ales` % of ales are IPA.
+
 
 Make a scatter plot of IBU vs ABV, with only IPA's and other ales
 ```{r}
@@ -129,7 +134,13 @@ best_k_acc  <- which.max(combined_stats$accuracy)
 best_k_sens <- which.max(combined_stats$sensitivity)
 best_k_spec <- which.max(combined_stats$specificity)
 best_k_combined <- which.max(combined_stats$sums)
+
+
 chosen_k = best_k_combined
+
+best_acc <-  round(100*combined_stats$accuracy[chosen_k])
+best_sens <- round(100*combined_stats$sensitivity[chosen_k])
+best_spec <- round(100*combined_stats$specificity[chosen_k])
 ```
 
 k of `r best_k_acc`  is best for accuracy
@@ -217,4 +228,53 @@ t.test(IBU ~ category,for_knn,var.equal=FALSE)
 ```{r}
 t.test(ABV ~ category,for_knn,var.equal=FALSE)
 ```
+
+We know that `r ipa_percent_of_ales` % of ales are IPA, so a blind guess that any 
+given Ale is not IPA will have an accuracy of `r other_percent_of_ales`.  It would 
+have a sensitivity of 100 % but specificity of 0 %.
+
+Since we know from our t-tests that there is a statistically significant
+difference in ABV and in IBU between IPA's and other ales, we should be able
+to use information in those values to help make a better model for determining
+whether an ale is an IPA or not.  In fact, using KNN as a classifier based 
+on ABV and IBU, we can classify an ale as IPA or not with `r best_acc` %
+overall accuracy.  This classifier has a sensitivty of `r best_sens` % 
+and specificity of `r best_spec` %.
+
+For comparison, have a look at a NB classifier
+```{r}
+pred_indices <- c("ABV","IBU")
+acc_nb = matrix(nrow=iterations,ncol=3)
+set.seed(42)
+for (j in 1:iterations)
+{
+  trainIndices = sample(seq(1:length(for_knn$ABV)),
+                        round(.7*length(for_knn$ABV)))
+  trainBeer = for_knn[trainIndices,]
+  testBeer = for_knn[-trainIndices,]
+  model_c <- naiveBayes(trainBeer[,pred_indices],trainBeer$category)
+  CM_c <- confusionMatrix(table(predict(model_c,testBeer[,pred_indices]),
+                                as.factor(testBeer$category)))
+                          
+  acc_nb[j,1] <- CM_c$overall[1] # accuracy
+  acc_nb[j,2] <- CM_c$byClass[1] # sensitivity
+  acc_nb[j,3] <- CM_c$byClass[2] # specificity
+}
+mean_stats <- colMeans(acc_nb)
+mean_accuracy <- mean_stats[1]
+mean_sensitivity <- mean_stats[2]
+mean_specificity <- mean_stats[3]
+```
+
+from Naive Bayes.
+
+accuracy is `r mean_accuracy`
+
+sensitivity is `r mean_sensitivity`
+
+specificity is `r mean_specificity`
+
+
+
+
 
