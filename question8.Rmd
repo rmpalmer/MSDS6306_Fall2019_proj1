@@ -10,6 +10,10 @@ library(class)
 library(caret)
 library(e1071)
 library(pracma)
+
+# shared variables
+q8_colors = c("#C8102E", "#13294b")
+iterations <- 100
 ```
 
 # Question 8
@@ -28,13 +32,28 @@ only_ales <- beers_categorized %>% filter(is_ipa | is_other_ale)
 
 # and make a factor for the type
 # here I replace orig columns with infilled columns.
-for_knn <- only_ales %>% 
+infill_normalized <- only_ales %>% 
   filter(is_ipa | is_other_ale) %>%
   mutate(category = as.factor(ifelse(is_ipa,'IPA','Other'))) %>%
   select(-IBU,-ABV) %>%
   rename(IBU=IBUfill,ABV=ABVfill) %>%
   mutate(abv_z = scale(ABV), ibu_z = scale(IBU)) %>%
   select(ABV,IBU,abv_z,ibu_z,category)
+
+# synthetic data, for looking at predictions 'everywhere'
+dummy <- data.frame(ABV=rep(0,100*100),IBU=rep(0,100*100))
+ABV <- linspace(min(infill_normalized$ABV),max(infill_normalized$ABV),100)
+IBU <- linspace(min(infill_normalized$IBU),max(infill_normalized$IBU),100)
+cnt <- 0
+for (i in 1:100)
+{
+  for (j in 1:100)
+  {
+    cnt <- cnt + 1
+    dummy[cnt,] <- c(ABV[i],IBU[j])
+  }
+}
+synth <- dummy %>% mutate(abv_z = scale(ABV), ibu_z = scale(IBU))
 
 # here I leave orig columns alone, but drop observations with missing values.
 for_orig_plot <- only_ales %>% 
@@ -43,7 +62,7 @@ for_orig_plot <- only_ales %>%
   drop_na(ABV,IBU)
 
 # columns to use for predictors
-knn_pred_indices = c("abv_z","ibu_z")                                                
+cols_for_knn = c("abv_z","ibu_z")                                                
 
 # counts
 total_count <- nrow(beers_raw)
@@ -68,31 +87,190 @@ Out of a total of `r total_count` beers, `r ipa_count` are IPA and `r other_coun
 
 
 Make a scatter plot of IBU vs ABV, with only IPA's and other ales
+
 ```{r}
 for_orig_plot %>% ggplot(aes(x=IBU,y=ABV,color=category)) + 
   geom_point() + ggtitle('ABV vs IBU for IPAs and other ales (missing values dropped)') +
   coord_cartesian(ylim = c(0.02,0.1),xlim=c(0,150)) +
   scale_color_manual(breaks = c("IPA", "Other"),
-                        values=c("#C8102E", "#13294b"))
+                        values=q8_colors)
 ```
 
+Make the same scatter plot, but using infilled data.
+
 ```{r}
-for_knn %>% ggplot(aes(x=IBU,y=ABV,color=category)) + 
+infill_normalized %>% ggplot(aes(x=IBU,y=ABV,color=category)) + 
   geom_point() + ggtitle('ABV vs IBU for IPAs and other ales (infilled)') +
   coord_cartesian(ylim = c(0.02,0.1),xlim=c(0,150)) +
   scale_color_manual(breaks = c("IPA", "Other"),
-                        values=c("#C8102E", "#13294b"))
+                        values=q8_colors)
 ```
 
-Do KNN classification
+From these scatter plots, it appears that the character of the relationship between
+ABV and IBU, for both IPA's and other ales, is unaffected by the infilling.  This
+gives us confidence that the infilling was valid, so further analysis will use only
+the infilled  values.
+
+We know that `r ipa_percent_of_ales` % of ales are IPA, so a fixed guess that any 
+given Ale is not IPA is the simplest model.  We expect this predictor 
+will have an accuracy of `r other_percent_of_ales` %.  It would 
+have a sensitivity of 100 % but specificity of 0 %.
+
+Make a constant classifier and check its performance.
+
+```{r}
+size = nrow(infill_normalized)
+always_ipa <- data.frame(sample(x=as.factor(c('IPA','Other')),size,replace=TRUE,prob=c(0,1)))
+colnames(always_ipa) <- c('guess')
+CM_always <- confusionMatrix(always_ipa$guess,infill_normalized$category)
+always_acc <- CM_always$overall[1] # accuracy
+always_sens <- CM_always$byClass[1] # sensitivity
+always_spec <- CM_always$byClass[2] # specificity
+```
+
+The accuracy turns out to be `r always_acc` %.
+
+The sensitivity is `r always_sens` %.
+
+The specificity is `r always_spec` %.
+
+
+A slightly more sophisticated model would be to randomly guess that a beer is an
+ale `r other_percent_of_ales` % of the time.  We simulate this to see how such a
+'guessing' model would perform.
+
+Make a random guess classifier.  Try it 100 times and find its average performance.
+
+```{r}
+acc_guess <- matrix(nrow=iterations,ncol=3)
+size = nrow(infill_normalized)
+for (j in 1:iterations) 
+{
+  guess <- data.frame(sample(x=as.factor(c('IPA','Other')),size,replace=TRUE,prob=c(ipa_count,other_count)))
+  colnames(guess) <- c('guess')
+  CM_guess <- confusionMatrix(guess$guess,infill_normalized$category)
+  acc_guess[j,1] <- CM_guess$overall[1] # accuracy
+  acc_guess[j,2] <- CM_guess$byClass[1] # sensitivity
+  acc_guess[j,3] <- CM_guess$byClass[2] # specificity
+}
+mean_stats <- colMeans(acc_guess)
+mean_accuracy    <- mean_stats[1]
+mean_sensitivity <- mean_stats[2]
+mean_specificity <- mean_stats[3]
+
+```
+
+The random guess model has accuracy of `r mean_accuracy` %.
+
+Its sensitivity is `r mean_sensitivity` %.
+
+Its specificity is `r mean_specificity` %.
+
+To see if ABV and IBU values can help us predict if an ale is IPA or not, first
+look at distributions of these quantities, separated by IPA or other ale.
+
+```{r}
+infill_normalized %>% ggplot(aes(x=ABV)) +
+  geom_histogram(aes(color=category,fill=category),
+                 position="identity",alpha=0.4,
+                 show.legend = TRUE,bins=21) +
+  ggtitle('histogram of ABV by category (infilled)') +
+  scale_color_manual(values=q8_colors) +
+  scale_fill_manual(values=q8_colors)
+```
+
+```{r}
+infill_normalized %>% ggplot(aes(x=IBU)) +
+  geom_histogram(aes(color=category,fill=category),
+                 position="identity",alpha=0.4,
+                 show.legend = TRUE,bins=21) +
+  ggtitle('histogram of IBU by category (infilled)') +
+  scale_color_manual(values=q8_colors) +
+  scale_fill_manual(values=q8_colors)
+```
+
+There appears to be clear separation of both ABV and IBU between
+IPA's and other ales.  Since the distributions appear close to
+normal, and similiar in shape for the two types of ale, we proceed
+with t-tests to determine if there is a statistically significant
+difference.
+
+```{r}
+t.test(IBU ~ category,infill_normalized,var.equal=FALSE)
+```
+
+```{r}
+t.test(ABV ~ category,infill_normalized,var.equal=FALSE)
+```
+
+Since there are statistically signficant differences with ABV and IBU,
+we first try a Naive Bayes classifier.
+
+```{r}
+pred_indices <- c("ABV","IBU")
+acc_nb = matrix(nrow=iterations,ncol=3)
+# for repeatability
+set.seed(42)
+for (j in 1:iterations)
+{
+  trainIndices = sample(seq(1:length(infill_normalized$ABV)),
+                        round(.7*length(infill_normalized$ABV)))
+  trainBeer = infill_normalized[trainIndices,]
+  testBeer = infill_normalized[-trainIndices,]
+  model_nb <- naiveBayes(trainBeer[,pred_indices],trainBeer$category)
+  CM_nb <- confusionMatrix(table(predict(model_nb,testBeer[,pred_indices]),
+                                as.factor(testBeer$category)))
+                          
+  acc_nb[j,1] <- CM_nb$overall[1] # accuracy
+  acc_nb[j,2] <- CM_nb$byClass[1] # sensitivity
+  acc_nb[j,3] <- CM_nb$byClass[2] # specificity
+}
+mean_stats <- colMeans(acc_nb)
+mean_accuracy <- mean_stats[1]
+mean_sensitivity <- mean_stats[2]
+mean_specificity <- mean_stats[3]
+```
+
+Averaging over `r iterations` trials, the Naive Bayes classifier has
+
+accuracy of `r mean_accuracy` %
+
+sensitivity of `r mean_sensitivity` %
+
+specificity of `r mean_specificity` %
+
+To understand the classification regions of the Naieve Bayes classifier,
+we make a prediction at every point in the ABV vs IBU space.
+
+```{r}
+beer_nb <- naiveBayes(infill_normalized[,pred_indices],infill_normalized$category)
+nb_predict <- predict(beer_nb, synth)
+synth_w_nbpred <- cbind(synth,nb_predict)
+synth_w_nbpred %>% ggplot(aes(x=IBU,y=ABV,color=nb_predict)) + geom_point() +
+  ggtitle('Class Map from Naive Bayes') +
+  scale_color_manual(breaks = c("IPA", "Other"),values=q8_colors)
+```
+
+The Naive Bayes classifier draws a clear boundary betweeen two regions.  Ales
+with high ABV and IBU are predicted to be IPA.
+
+However, this does not well capture the relationship that is apparent in the
+scatter plot of ABV vs IBU for IPA's and other ales.  To better use this
+information, we use a KNN classifier, labeling an ale as IPA or not according
+to the majority of its nearest neighbors.  To tune the KNN model, we try
+several different neighborhood sizes (k).
+
+
+Do KNN classification.  Make 100 iterations of the model, splitting the data
+into training and test datasets each time and averaging the performance
+statistics of the model.  Do this for a number of different k values.
 
 ```{r}
 # for repeatability
 set.seed(42)
 splitPerc <- .7
-iterations <- 100
 numks <- 50
-my_stats = matrix(nrow=numks,ncol=4)
+knn_stats = matrix(nrow=numks,ncol=4)
 for (i in 1:numks)
 {
   acc  = matrix(nrow=iterations,ncol=1)
@@ -100,23 +278,29 @@ for (i in 1:numks)
   spec = matrix(nrow=iterations,ncol=1)
   for (j in 1:iterations)
   {
-    trainIndices = sample(1:dim(for_knn)[1],round(splitPerc * dim(for_knn)[1]))
-    train = for_knn[trainIndices,]
-    test = for_knn[-trainIndices,]
-    classifications = knn(train[,knn_pred_indices],
-                              test[,knn_pred_indices],
+    trainIndices = sample(1:dim(infill_normalized)[1],round(splitPerc * dim(infill_normalized)[1]))
+    train = infill_normalized[trainIndices,]
+    test = infill_normalized[-trainIndices,]
+    classifications = knn(train[,cols_for_knn],
+                              test[,cols_for_knn],
                               as.factor(train$category), prob = TRUE, k = i)
     CM = confusionMatrix(table(as.factor(test$category),classifications))
     acc[j]  = CM$overall[1]
     sens[j] = CM$byClass[1]
     spec[j] = CM$byClass[2]
   }
-  my_stats[i,1] = i
-  my_stats[i,2] = colMeans(acc)
-  my_stats[i,3] = colMeans(sens)
-  my_stats[i,4] = colMeans(spec)
+  knn_stats[i,1] = i
+  knn_stats[i,2] = colMeans(acc)
+  knn_stats[i,3] = colMeans(sens)
+  knn_stats[i,4] = colMeans(spec)
 }
-stats_frame <- data.frame(my_stats)
+
+```
+
+Look at all `r numks` values of k to determine what k value gives best performance.
+
+```{r}
+stats_frame <- data.frame(knn_stats)
 colnames(stats_frame) <- c("k","accuracy","sensitivity","specificity")
 for_plot <- reshape2::melt(stats_frame,id.var='k')
 for_plot %>% ggplot(aes(x=k,y=value,col=variable)) + 
@@ -135,7 +319,6 @@ best_k_sens <- which.max(combined_stats$sensitivity)
 best_k_spec <- which.max(combined_stats$specificity)
 best_k_combined <- which.max(combined_stats$sums)
 
-
 chosen_k = best_k_combined
 
 best_acc <-  round(100*combined_stats$accuracy[chosen_k])
@@ -143,187 +326,41 @@ best_sens <- round(100*combined_stats$sensitivity[chosen_k])
 best_spec <- round(100*combined_stats$specificity[chosen_k])
 ```
 
-k of `r best_k_acc`  is best for accuracy
-k of `r best_k_sens` is best for sensitivity
-k of `r best_k_spec` is best for specificity
-
-we choose `r chosen_k` as best overall
+k of `r best_k_acc`  is best for accuracy.
 
 
-```{r}
-splitPerc <- .7
-trainIndices = sample(1:dim(for_knn)[1],round(splitPerc * dim(for_knn)[1]))
-train = for_knn[trainIndices,]
-test = for_knn[-trainIndices,]
-classifications = knn(train[,knn_pred_indices],
-                      test[,knn_pred_indices],
-                      as.factor(train$category), prob = TRUE, k = chosen_k)
-CM = confusionMatrix(table(as.factor(test$category),classifications))
-CM
-```
+k of `r best_k_sens` is best for sensitivity.
+k of `r best_k_spec` is best for specificity.
 
+we choose `r chosen_k` as best overall, since it gives the
+highest sum of accuracy, sensitivity, and specificity.
 
-```{r}
-knn_pred <- knn(for_knn[,knn_pred_indices],
-                for_knn[,knn_pred_indices],
-                as.factor(for_knn$category),k=chosen_k)
-with_pred <- cbind(for_knn,knn_pred)
-with_pred %>% ggplot(aes(x=IBU,y=ABV,color=knn_pred)) + geom_point() + ggtitle('Predicted Class') +
-  scale_color_manual(breaks = c("IPA", "Other"),
-                        values=c("#C8102E", "#13294b"))
-```
+As with the Naive Bayes classifier, to understand the classification
+regions of the KNN classifier, we make a prediction at every point
+in the ABV vs IBU space.
 
 ```{r}
 plot_title <- paste('Class map from knn with k of',as.character(chosen_k))
-ABV <- linspace(min(for_knn$ABV),max(for_knn$ABV),100)
-IBU <- linspace(min(for_knn$IBU),max(for_knn$IBU),100)
-
-dummy <- data.frame(ABV=rep(0,100*100),IBU=rep(0,100*100))
-cnt <- 0
-for (i in 1:100)
-{
-  for (j in 1:100)
-  {
-    cnt <- cnt + 1
-    dummy[cnt,] <- c(ABV[i],IBU[j])
-  }
-}
-synth <- dummy %>% mutate(abv_z = scale(ABV), ibu_z = scale(IBU))
-
-synth_pred <- knn(for_knn[,knn_pred_indices],
-                  synth[,knn_pred_indices],
-                  as.factor(for_knn$category),k=chosen_k)
-synthetic <- cbind(synth,synth_pred)
-synthetic %>% ggplot(aes(x=IBU,y=ABV,color=synth_pred)) + geom_point() + ggtitle(plot_title) +
-  scale_color_manual(breaks = c("IPA", "Other"),values=c("#C8102E", "#13294b"))
+synth_pred_knn <- knn(infill_normalized[,cols_for_knn],
+                  synth[,cols_for_knn],
+                  as.factor(infill_normalized$category),k=chosen_k)
+synth_w_knnpred <- cbind(synth,synth_pred_knn)
+synth_w_knnpred %>% ggplot(aes(x=IBU,y=ABV,color=synth_pred_knn)) + geom_point() + ggtitle(plot_title) +
+  scale_color_manual(breaks = c("IPA", "Other"),values=q8_colors)
 ```
 
-Consider t-tests of ABV and IBU
+This model does capture more of the detailed relationship between ABV and IBU
+for IPA's and other ales.
 
-First check normality
+Finally, go back and make predictions of all points in the original dataset.
 
 ```{r}
-for_knn %>% ggplot(aes(x=ABV)) +
-  geom_histogram(aes(color=category,fill=category),
-                 position="identity",alpha=0.4,
-                 show.legend = TRUE,bins=21) +
-  ggtitle('histogram of ABV by category (infilled)') +
-  scale_color_manual(values=c("#C8102E", "#13294b")) +
-  scale_fill_manual(values=c("#C8102E", "#13294b"))
+knn_pred <- knn(infill_normalized[,cols_for_knn],
+                infill_normalized[,cols_for_knn],
+                as.factor(infill_normalized$category),k=chosen_k)
+with_pred <- cbind(infill_normalized,knn_pred)
+with_pred %>% ggplot(aes(x=IBU,y=ABV,color=knn_pred)) + geom_point() + ggtitle('Predicted Class') +
+  scale_color_manual(breaks = c("IPA", "Other"),
+                        values=q8_colors)
 ```
-
-```{r}
-for_knn %>% ggplot(aes(x=IBU)) +
-  geom_histogram(aes(color=category,fill=category),
-                 position="identity",alpha=0.4,
-                 show.legend = TRUE,bins=21) +
-  ggtitle('histogram of IBU by category (infilled)') +
-  scale_color_manual(values=c("#C8102E", "#13294b")) +
-  scale_fill_manual(values=c("#C8102E", "#13294b"))
-```
-
-```{r}
-t.test(IBU ~ category,for_knn,var.equal=FALSE)
-```
-
-```{r}
-t.test(ABV ~ category,for_knn,var.equal=FALSE)
-```
-
-We know that `r ipa_percent_of_ales` % of ales are IPA, so a blind guess that any 
-given Ale is not IPA will have an accuracy of `r other_percent_of_ales`.  It would 
-have a sensitivity of 100 % but specificity of 0 %.
-
-Since we know from our t-tests that there is a statistically significant
-difference in ABV and in IBU between IPA's and other ales, we should be able
-to use information in those values to help make a better model for determining
-whether an ale is an IPA or not.  In fact, using KNN as a classifier based 
-on ABV and IBU, we can classify an ale as IPA or not with `r best_acc` %
-overall accuracy.  This classifier has a sensitivty of `r best_sens` % 
-and specificity of `r best_spec` %.
-
-make a constant classifier
-```{r}
-always_ipa <- data.frame(sample(x=as.factor(c('IPA','Other')),size,replace=TRUE,prob=c(0,1)))
-colnames(always_ipa) <- c('guess')
-CM_always <- confusionMatrix(always_ipa$guess,for_knn$category)
-always_acc <- CM_always$overall[1] # accuracy
-always_sens <- CM_always$byClass[1] # sensitivity
-always_spec <- CM_always$byClass[2] # specificity
-always_acc
-always_sens
-always_spec
-```
-
-Make a simple guess classifier
-```{r}
-acc_guess <- matrix(nrow=iterations,ncol=3)
-size = nrow(for_knn)
-for (j in 1:iterations) 
-{
-  guess <- data.frame(sample(x=as.factor(c('IPA','Other')),size,replace=TRUE,prob=c(ipa_count,other_count)))
-  colnames(guess) <- c('guess')
-  CM_guess <- confusionMatrix(guess$guess,for_knn$category)
-  acc_guess[j,1] <- CM_guess$overall[1] # accuracy
-  acc_guess[j,2] <- CM_guess$byClass[1] # sensitivity
-  acc_guess[j,3] <- CM_guess$byClass[2] # specificity
-}
-mean_stats <- colMeans(acc_guess)
-mean_accuracy    <- mean_stats[1]
-mean_sensitivity <- mean_stats[2]
-mean_specificity <- mean_stats[3]
-
-mean_accuracy
-mean_sensitivity
-mean_specificity
-```
-guess$guess
-
-The simple guess model has accuracy of 
-
-For comparison, have a look at a NB classifier
-```{r}
-pred_indices <- c("ABV","IBU")
-acc_nb = matrix(nrow=iterations,ncol=3)
-set.seed(42)
-for (j in 1:iterations)
-{
-  trainIndices = sample(seq(1:length(for_knn$ABV)),
-                        round(.7*length(for_knn$ABV)))
-  trainBeer = for_knn[trainIndices,]
-  testBeer = for_knn[-trainIndices,]
-  model_c <- naiveBayes(trainBeer[,pred_indices],trainBeer$category)
-  CM_c <- confusionMatrix(table(predict(model_c,testBeer[,pred_indices]),
-                                as.factor(testBeer$category)))
-                          
-  acc_nb[j,1] <- CM_c$overall[1] # accuracy
-  acc_nb[j,2] <- CM_c$byClass[1] # sensitivity
-  acc_nb[j,3] <- CM_c$byClass[2] # specificity
-}
-mean_stats <- colMeans(acc_nb)
-mean_accuracy <- mean_stats[1]
-mean_sensitivity <- mean_stats[2]
-mean_specificity <- mean_stats[3]
-```
-
-```{r}
-beer_nb <- naiveBayes(for_knn[,pred_indices],for_knn$category)
-nb_predict <- predict(beer_nb, synth)
-synthetic <- cbind(synth,nb_predict)
-synthetic %>% ggplot(aes(x=IBU,y=ABV,color=nb_predict)) + geom_point() +
-  ggtitle('Class Map from Naive Bayes') +
-  scale_color_manual(breaks = c("IPA", "Other"),values=c("#C8102E", "#13294b"))
-```
-
-from Naive Bayes.
-
-accuracy is `r mean_accuracy`
-
-sensitivity is `r mean_sensitivity`
-
-specificity is `r mean_specificity`
-
-
-
-
 
