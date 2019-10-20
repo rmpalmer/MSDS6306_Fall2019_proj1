@@ -17,13 +17,14 @@ and state for each brewery.  The goal is to answer some specific questions
 about the data and to look for relationships or inferences which may be of
 interest to a hypothetical sponsor, Budweiser.
 
-##Study design and data processing
+## Study design and data processing
 
-###Collection of the raw data
+### Collection of the raw data
 Data was provided by the client in two text .csv files.
 
-###Notes on the original (raw) data 
-Beers.csv:  
+### Notes on the original (raw) data 
+Beers.csv
+2410 Observations.  
 Name: Name of the beer.   
 Beer_ID: Unique identifier of the beer.  
 ABV: Alcohol by volume of the beer.  
@@ -33,37 +34,42 @@ Style: Style of the beer.
 Ounces: Ounces of beer.  
 
 Breweries.csv:  
+558 Observations.  
 Brew_ID: Unique identifier of the brewery.  
 Name: Name of the brewery.  
 City: City where the brewery is located.  
 State: U.S. State where the brewery is located.  
 
-##Creating the tidy datafile
+## Description of the variables in the merged dataset
 
-###Guide to create the tidy data file
-Description on how to create the tidy data file (1. download the data, ...)/
+### Beer_name  
+Name of the beer.   
 
-###Cleaning of the data
-Short, high-level description of what the cleaning script does.
+### Beer_ID
+Integer id number to uniquely identify each beer.
 
-##Description of the variables in the tiny_data.txt file
+### ABV
+Alcohol by volume (expressed as decimal fraction).
 
-###Variable 1 (repeat this section for all variables in the dataset)
-Short description of what the variable describes.
+### IBU
+International Bitterness Units of the beer (an integer).
 
-Some information on the variable including:
- - Class of the variable
- - Unique values/levels of the variable
- - Unit of measurement (if no unit of measurement list this as well)
- - In case names follow some schema, describe how entries were constructed (for example time-body-gyroscope-z has 4 levels of descriptors. Describe these 4 levels). 
+### Brew_ID
+Integer id number to uniquely identify the brewery which produced the beer.
 
-(you can easily use Rcode for this, just load the dataset and provide the information directly form the tidy data file)
+### Style
+Character string stored as a factor with 100 distinct values.
 
-####Notes on variable 1:
-If available, some additional notes on the variable not covered elsewehere. If no notes are present leave this section out.
+### Ounces
+Serving size in ounces, represented as integer.
 
-##Sources
-Sources you used if any, otherise leave out.
+### Brewery_name
+Character string stored as a factor with 551 distinct values.
 
-##Annex
-If you used any code in the codebook that had the echo=FALSE attribute post this here (make sure you set the results parameter to 'hide' as you do not want the results to show again)
+### City
+Character string stored as a factor with 384 distinct values.
+
+### State
+Two Character string stored as a factor with 51 distinct values.
+
+
