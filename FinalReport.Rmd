@@ -1,7 +1,7 @@
 ---
 title: "FinalReport"
 author: "Steven Garrity + Richard Palmer"
-date: "10/6/2019"
+date: "10/26/2019"
 output: html_document
 ---
 
@@ -13,6 +13,14 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Introduction
+
+The purpose of this project is to study a dataset of 
+`r nrow(beers_raw)` beers produced by `r nrow(breweries_raw)`
+breweries in the United States.  We have data on the style, ABV (alcohol by volume)
+and IBU (international bitterness units) of each beer, and we have the city
+and state for each brewery.  The goal is to answer some specific questions 
+about the data and to look for relationships or inferences which may be of
+interest to a hypothetical sponsor, Budweiser.
 
 ```{r child = 'question1.Rmd'}
 ```
