@@ -1,0 +1,69 @@
+---
+title: "Codebook"
+author: "Garrity/Palmer"
+date: "10/20/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Project Description
+The purpose of this project is to study a dataset of 2410 beers produced by 558 
+breweries in the United States.  We have data on the style, ABV (alcohol by volume)
+and IBU (international bitterness units) of each beer, and we have the city
+and state for each brewery.  The goal is to answer some specific questions 
+about the data and to look for relationships or inferences which may be of
+interest to a hypothetical sponsor, Budweiser.
+
+##Study design and data processing
+
+###Collection of the raw data
+Data was provided by the client in two text .csv files.
+
+###Notes on the original (raw) data 
+Beers.csv:  
+Name: Name of the beer.   
+Beer_ID: Unique identifier of the beer.  
+ABV: Alcohol by volume of the beer.  
+IBU: International Bitterness Units of the beer.  
+Brewery_ID: Brewery id associated with the beer.  
+Style: Style of the beer.  
+Ounces: Ounces of beer.  
+
+Breweries.csv:  
+Brew_ID: Unique identifier of the brewery.  
+Name: Name of the brewery.  
+City: City where the brewery is located.  
+State: U.S. State where the brewery is located.  
+
+##Creating the tidy datafile
+
+###Guide to create the tidy data file
+Description on how to create the tidy data file (1. download the data, ...)/
+
+###Cleaning of the data
+Short, high-level description of what the cleaning script does.
+
+##Description of the variables in the tiny_data.txt file
+
+###Variable 1 (repeat this section for all variables in the dataset)
+Short description of what the variable describes.
+
+Some information on the variable including:
+ - Class of the variable
+ - Unique values/levels of the variable
+ - Unit of measurement (if no unit of measurement list this as well)
+ - In case names follow some schema, describe how entries were constructed (for example time-body-gyroscope-z has 4 levels of descriptors. Describe these 4 levels). 
+
+(you can easily use Rcode for this, just load the dataset and provide the information directly form the tidy data file)
+
+####Notes on variable 1:
+If available, some additional notes on the variable not covered elsewehere. If no notes are present leave this section out.
+
+##Sources
+Sources you used if any, otherise leave out.
+
+##Annex
+If you used any code in the codebook that had the echo=FALSE attribute post this here (make sure you set the results parameter to 'hide' as you do not want the results to show again)
