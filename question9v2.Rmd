@@ -1,0 +1,42 @@
+---
+title: "Question 9 v2"
+author: "Steven Garrity"
+date: "10/20/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Question 9
+Knocking their socks off.
+```{r}
+
+merged$ratio <- merged$IBU/(merged$ABV*100)
+
+q9filled <- merged %>% 
+  group_by(State) %>% 
+  summarize(ia_ratio = median(ratio, rm.na=TRUE)) %>% 
+  summarize(medianabv = median(ABV, rm.na=TRUE)) %>%
+  summarize(medianibu = median(IBU, rm.na=TRUE))
+  arrange(desc(ia_ratio))
+  
+breweries_by_state_tomap <- merge(breweries_by_state_temp, statepop, by="abbr")
+
+q9filled$State <- str_trim(q9filled$State, "left")
+colnames(q9filled)[1] = "abbr"
+q9filled$abbr <- as.character(q9filled$abbr)
+ 
+ratio_bystate_tomap <- merge(q9filled, states_and_dc, by="abbr")
+
+# 
+library(usmap)
+library(ggthemes)
+# 
+plot_usmap(regions = c("states"), data = ratio_bystate_tomap,
+  values = "ia_ratio", theme = theme_map(), labels = FALSE,
+  label_color = "black") +
+  scale_fill_continuous(name = "IBU:ABV", low="ivory", high="#13294b") +
+  theme(legend.position="right") +
+  labs(title = 'Mean IBU:ABV ratio')
