@@ -14,7 +14,22 @@ library(tidyverse)
 Knocking their socks off.
 ```{r}
 
-merged$ratio <- merged$IBU/(merged$ABV*100)
+# categorize beers as ipa, or other ale (still have orig columns as well as infilled)
+# beers_categorized <- merged %>%
+#   mutate(is_ipa = grepl("\\bIPA\\b",Style,ignore.case = TRUE)) %>%
+#   mutate(is_ale = grepl("\\bale\\b",Style,ignore.case = TRUE)) %>%
+#   mutate(is_american = grepl("\\bamerican\\b",Style,ignore.case = TRUE)) %>%
+#   mutate(is_belgian = grepl("\\bbelgian\\b",Style,ignore.case = TRUE)) %>%
+#   mutate(is_other_ale = (is_ale & !is_ipa)) 
+# 
+# merged$ratio <- merged$IBU/(merged$ABV*100)
+
+style_count <- merged %>% group_by(Style) %>% summarize(n = n()) %>% arrange(desc(n))
+
+style_count %>% filter(n > 50) %>% ggplot(aes(x=reorder(Style, desc(n)), y = n)) +
+  geom_bar(stat="identity", fill = "#C8102E") +
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  labs(title="10 Most Common Styles of Craft Brews", x="", y="Count")
 
 q9filled <- merged %>% 
   group_by(State) %>% 
