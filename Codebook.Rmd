@@ -1,0 +1,75 @@
+---
+title: "Codebook"
+author: "Garrity/Palmer"
+date: "10/20/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Project Description
+The purpose of this project is to study a dataset of 2410 beers produced by 558 
+breweries in the United States.  We have data on the style, ABV (alcohol by volume)
+and IBU (international bitterness units) of each beer, and we have the city
+and state for each brewery.  The goal is to answer some specific questions 
+about the data and to look for relationships or inferences which may be of
+interest to a hypothetical sponsor, Budweiser.
+
+## Study design and data processing
+
+### Collection of the raw data
+Data was provided by the client in two text .csv files.
+
+### Notes on the original (raw) data 
+Beers.csv
+2410 Observations.  
+Name: Name of the beer.   
+Beer_ID: Unique identifier of the beer.  
+ABV: Alcohol by volume of the beer.  
+IBU: International Bitterness Units of the beer.  
+Brewery_ID: Brewery id associated with the beer.  
+Style: Style of the beer.  
+Ounces: Ounces of beer.  
+
+Breweries.csv:  
+558 Observations.  
+Brew_ID: Unique identifier of the brewery.  
+Name: Name of the brewery.  
+City: City where the brewery is located.  
+State: U.S. State where the brewery is located.  
+
+## Description of the variables in the merged dataset
+
+### Beer_name  
+Name of the beer.   
+
+### Beer_ID
+Integer id number to uniquely identify each beer.
+
+### ABV
+Alcohol by volume (expressed as decimal fraction).
+
+### IBU
+International Bitterness Units of the beer (an integer).
+
+### Brew_ID
+Integer id number to uniquely identify the brewery which produced the beer.
+
+### Style
+Character string stored as a factor with 100 distinct values.
+
+### Ounces
+Serving size in ounces, represented as integer.
+
+### Brewery_name
+Character string stored as a factor with 551 distinct values.
+
+### City
+Character string stored as a factor with 384 distinct values.
+
+### State
+Two Character string stored as a factor with 51 distinct values.
+
+
