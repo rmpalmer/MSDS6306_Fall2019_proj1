@@ -9,23 +9,22 @@ interest to a hypothetical sponsor, Budweiser.
 
 Files found in this repository:
 
-Original raw data:
-Beers.csv
-Breweries.csv
+Original raw data:  
+Beers.csv  
+Breweries.csv  
 
 R Markdown files:
-FinalReport.Rmd, which refers to the following files:
-Question1.Rmd
-Question2.Rmd
-Question3.Rmd
-Question4.Rmd
-Question5.Rmd
-Question6.Rmd
-Question7.Rmd
-Question8.Rmd
-Question9.Rmd
+FinalReport.Rmd, which refers to the following files:  
+Question1.Rmd  
+Question2.Rmd  
+Question3.Rmd  
+Question4.Rmd  
+Question5.Rmd  
+Question6.Rmd  
+Question7.Rmd  
+Question8.Rmd  
+Question9.Rmd  
 
-
-Final product:
-FinalReport.html (as generated from the above markdown files)
-FinalReport.ppt  (created 
+Final product:  
+FinalReport.html (as generated from the above markdown files)  
+FinalReport.ppt  (created  
