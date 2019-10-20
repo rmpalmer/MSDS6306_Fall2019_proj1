@@ -128,11 +128,11 @@ always_sens <- CM_always$byClass[1] # sensitivity
 always_spec <- CM_always$byClass[2] # specificity
 ```
 
-The accuracy turns out to be `r always_acc` %.
+The accuracy turns out to be `r format(100*always_acc,digits=2)` %.
 
-The sensitivity is `r always_sens` %.
+The sensitivity is `r format(100*always_sens,digits=2)` %.
 
-The specificity is `r always_spec` %.
+The specificity is `r format(100*always_spec,digits=2)` %.
 
 
 A slightly more sophisticated model would be to randomly guess that a beer is an
@@ -160,11 +160,11 @@ mean_specificity <- mean_stats[3]
 
 ```
 
-The random guess model has accuracy of `r mean_accuracy` %.
+The random guess model has accuracy of `r format(100*mean_accuracy,digits=2)` %.
 
-Its sensitivity is `r mean_sensitivity` %.
+Its sensitivity is `r format(100*mean_sensitivity,digits=2)` %.
 
-Its specificity is `r mean_specificity` %.
+Its specificity is `r format(100*mean_specificity,digits=2)` %.
 
 To see if ABV and IBU values can help us predict if an ale is IPA or not, first
 look at distributions of these quantities, separated by IPA or other ale.
@@ -233,11 +233,11 @@ mean_specificity <- mean_stats[3]
 
 Averaging over `r iterations` trials, the Naive Bayes classifier has
 
-accuracy of `r mean_accuracy` %
+accuracy of `r format(100*mean_accuracy,digits=2)` %
 
-sensitivity of `r mean_sensitivity` %
+sensitivity of `r format(100*mean_sensitivity,digits=2)` %
 
-specificity of `r mean_specificity` %
+specificity of `r format(100*mean_specificity,digits=2)` %
 
 To understand the classification regions of the Naieve Bayes classifier,
 we make a prediction at every point in the ABV vs IBU space.
