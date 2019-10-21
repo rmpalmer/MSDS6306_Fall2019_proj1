@@ -13,50 +13,225 @@ library(tidyverse)
 # Question 9
 Knocking their socks off.
 ```{r}
+#cleaning house:
+merged$State <- str_trim(merged$State, "left")
 
-# categorize beers as ipa, or other ale (still have orig columns as well as infilled)
-# beers_categorized <- merged %>%
-#   mutate(is_ipa = grepl("\\bIPA\\b",Style,ignore.case = TRUE)) %>%
-#   mutate(is_ale = grepl("\\bale\\b",Style,ignore.case = TRUE)) %>%
-#   mutate(is_american = grepl("\\bamerican\\b",Style,ignore.case = TRUE)) %>%
-#   mutate(is_belgian = grepl("\\bbelgian\\b",Style,ignore.case = TRUE)) %>%
-#   mutate(is_other_ale = (is_ale & !is_ipa)) 
-# 
-# merged$ratio <- merged$IBU/(merged$ABV*100)
-
+# basic EDA
 style_count <- merged %>% group_by(Style) %>% summarize(n = n()) %>% arrange(desc(n))
-
 style_count %>% filter(n > 50) %>% ggplot(aes(x=reorder(Style, desc(n)), y = n)) +
   geom_bar(stat="identity", fill = "#C8102E") +
   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
   labs(title="10 Most Common Styles of Craft Brews", x="", y="Count")
 
-q9filled <- merged %>% 
-  group_by(State) %>% 
-  summarize(ia_ratio = median(ratio, rm.na=TRUE)) %>% 
-  summarize(medianabv = median(ABV, rm.na=TRUE)) %>%
-  summarize(medianibu = median(IBU, rm.na=TRUE))
-  arrange(desc(ia_ratio))
+# 1. find the most popular beers in each state
+# 2. find the states that have lower than average breweries per capita
+# 3. find states with > 5M total population
+# 4. identify the 1st, 2nd, and 3rd most popular beers in those states
+
+# get the 1st, 2nd, and 3rd most popular beers per state
+stateabbr <- unique(merged$State)
+popular1 <- c()
+popular2 <- c()
+popular3 <- c()
+for (i in 1:length(states))
+{
+  temp <- merged %>% 
+    filter(State==stateabbr[i]) %>% 
+    group_by(Style) %>% 
+    summarize(n=n()) %>% 
+    arrange(desc(n))
   
-breweries_by_state_tomap <- merge(breweries_by_state_temp, statepop, by="abbr")
+  popular1[i] <- as.character(temp$Style)[1]
+  popular2[i] <- as.character(temp$Style)[2]
+  popular3[i] <- as.character(temp$Style)[3]
+}
 
-q9filled$State <- str_trim(q9filled$State, "left")
-colnames(q9filled)[1] = "abbr"
-q9filled$abbr <- as.character(q9filled$abbr)
- 
-ratio_bystate_tomap <- merge(q9filled, states_and_dc, by="abbr")
+q9 <- data.frame(State = stateabbr, P1 = popular1, P2 = popular2, P3 = popular3)
 
-# 
-library(usmap)
-library(ggthemes)
-# 
-plot_usmap(regions = c("states"), data = ratio_bystate_tomap,
-  values = "ia_ratio", theme = theme_map(), labels = FALSE,
-  label_color = "black") +
-  scale_fill_continuous(name = "IBU:ABV", low="ivory", high="#13294b") +
+style_count_bystate <- merged %>% group_by(State) %>% summarize(nStyles = n_distinct(Style))
+q9 <- merge(q9, style_count_bystate, by="State")
+
+tempbrewery <- breweries_raw %>%  group_by(State) %>% summarize(breweryCount = n())
+q9$breweryCount <- tempbrewery$breweryCount
+
+temp <- statepop
+temp$State <- temp$abbr
+q9 <- merge(q9,temp, by="State")
+
+q9$nBreweriesPerCapita = q9$breweryCount/q9$pop_2015
+
+# which states have populations > 5,000,000
+q9$gt5M <- "lt5M"
+q9$gt5M[which(q9$pop_2015 > 5000000)] = "gt5M"
+
+# which states have below average breweries per Capita
+q9$belowperCapita <- "gtMedian"
+q9$belowperCapita[which(q9$nBreweriesPerCapita < median(q9$nBreweriesPerCapita, na.rm=TRUE))] = "ltMedian"
+
+# q9$state <- states_and_dc$state
+
+q9$target <- "no"
+q9$target[which(q9$gt5M == "gt5M" & q9$belowperCapita == "ltMedian")] = "yes"
+
+# intersection of population and breweries per capita
+q9$popular1st <- "N/A"
+q9$popular1st[which(q9$gt5M == "gt5M" & q9$belowperCapita == "ltMedian")] = 
+  as.character(q9$P1[which(q9$gt5M == "gt5M" & q9$belowperCapita == "ltMedian")])
+
+q9$popular2nd <- "N/A"
+q9$popular2nd[which(q9$gt5M == "gt5M" & q9$belowperCapita == "ltMedian")] = 
+  as.character(q9$P2[which(q9$gt5M == "gt5M" & q9$belowperCapita == "ltMedian")])
+
+q9$popular3rd <- "N/A"
+q9$popular3rd[which(q9$gt5M == "gt5M" & q9$belowperCapita == "ltMedian")] = 
+  as.character(q9$P3[which(q9$gt5M == "gt5M" & q9$belowperCapita == "ltMedian")])
+
+####################################################
+#### mapping
+# library(usmap)
+# library(ggthemes)
+
+plot_usmap(regions = c("states"), data = q9,
+  values = "gt5M", theme = theme_map(), labels = FALSE,
+  label_color = "black") + 
   theme(legend.position="right") +
-  labs(title = 'Mean IBU:ABV ratio')
+  scale_fill_manual(name = "", values=c("grey","white")) +
+  labs(title = 'States with Population of 5M or greater')
 
+plot_usmap(regions = c("states"), data = q9,
+  values = "belowperCapita", theme = theme_map(), labels = FALSE,
+  label_color = "black") + 
+  theme(legend.position="right") +
+  scale_fill_manual(name = "", values=c("white","navyblue")) +
+  labs(title = 'States with lower than median Breweries per Capita')
+
+plot_usmap(regions = c("states"), data = q9,
+  values = "target", theme = theme_map(), labels = FALSE,
+  label_color = "black") + 
+  theme(legend.position="right") +
+  scale_fill_manual(name = "", values=c("white","red")) +
+  labs(title = 'States to Target')
+
+plot_usmap(regions = c("states"), data = q9,
+  values = "popular1st", theme = theme_map(), labels = FALSE,
+  label_color = "black") + 
+  theme(legend.position="right") +
+  scale_fill_manual(name = "Style", values=c("white","red","blue","darkgray")) +
+  labs(title = 'Most Frequent Beer Style')
+
+plot_usmap(regions = c("states"), data = q9,
+  values = "popular2nd", theme = theme_map(), labels = FALSE,
+  label_color = "black") + 
+  theme(legend.position="right") +
+  scale_fill_manual(name = "Style", values=c("green","white","red","blue","darkgray")) +
+  labs(title = '2nd Most Frequent Beer Style')
+
+plot_usmap(regions = c("states"), data = q9,
+  values = "popular3rd", theme = theme_map(), labels = FALSE,
+  label_color = "black") + 
+  theme(legend.position="right") +
+  scale_fill_manual(name = "Style", values=c("green","white","red","blue","navyblue","red3","grey","blue4","darkgray")) +
+  labs(title = '3rd Most Frequent Beer Style')
+
+
+plot_usmap(regions = c("states"), data = q9,
+  values = "P1", theme = theme_map(), labels = FALSE,
+  label_color = "black") + 
+  theme(legend.position="right") +
+  scale_fill_manual(name = "Style", values=c("green","white","red","blue","navyblue","red3","grey","blue4","seagreen1","darkgray","slateblue3","yellow2")) +
+  labs(title = 'Most Frequent Beer Style')
+
+
+
+
+
+
+###############################################
+#### old junk...something might be useful later
+# 
+# 
+# merged$ratio <- merged$IBU/(merged$ABV*100)
+# ia_ratio <- merged %>% 
+#   group_by(State) %>% 
+#   summarize(ia_ratio = median(ratio, na.rm=TRUE))
+# medianabv <- merged %>% 
+#   group_by(State) %>% 
+#   summarize(medianabv = median(ABV, na.rm=TRUE))
+# medianibu <- merged %>%
+#   group_by(State) %>%
+#   summarize(medianibu = median(IBU, na.rm=TRUE))
+# nStyles <- merged %>%
+#   group_by(State) %>%
+#   summarize(nStyles = n_distinct(Style))
+# 
+# brewerycount <- breweries_raw %>%  group_by(State) %>% summarize(count = n())
+# brewerycount$perCapita <- brewerycount$count/(statepop$pop_2015/1000000)
+# # brewerycount$StatePop <- statepop$pop_2015
+# brewerycount$count <- NULL
+# 
+# ia_ratio$State <- as.character(ia_ratio$State)
+# medianabv$State <- as.character(medianabv$State)
+# medianibu$State <- as.character(medianibu$State)
+# nStyles$State <- as.character(nStyles$State)
+# brewerycount$State <- as.character(brewerycount$State)
+# 
+# m1 <- merge(ia_ratio, medianabv, by="State")
+# m2 <- merge(medianibu, nStyles, by="State")
+# m3 <- merge(m2, brewerycount, by="State")
+# mergedstates <- merge(m1,m3, by="State")
+# 
+# # change the row names to the state abbreviation
+# mergedstates$State <- str_trim(mergedstates$State, "left")
+# # row.names(mergedstates) <- mergedstates$State
+# # mergedstates$State <- NULL
+# for_kmeans <- mergedstates %>% drop_na()
+# statesvar <- for_kmeans$State
+# row.names(for_kmeans) <- for_kmeans$State
+# for_kmeans$State <- NULL
+# 
+# # k-means clustering
+# # find optimal "k"
+# # library(factoextra)
+# fviz_nbclust(for_kmeans, kmeans, method="silhouette")
+# 
+# set.seed(10)
+# brewsCluster <- kmeans(for_kmeans, 4, nstart=20)
+# str(brewsCluster)
+# brewsCluster$cluster
+# cluster_container = c()
+# for (i in 1:length(brewsCluster$cluster))
+# {
+#   cluster_container[i] <- brewsCluster$cluster[[i]]
+# }
+# 
+# 
+# 
+# 
+# fviz_cluster(brewsCluster, for_kmeans)
+# 
+# 
+# 
+# 
+# 
+# #### mapping
+# library(usmap)
+# library(ggthemes)
+# 
+# for_kmeans_tomap <- for_kmeans
+# for_kmeans_tomap$cluster <- cluster_container
+# # for_kmeans_tomap$fips <- statesvar
+# for_kmeans_tomap$state <- breweries_by_state_tomap$state
+# for_kmeans_tomap$cluster <- as.factor(for_kmeans_tomap$cluster)
+# 
+# # 
+# plot_usmap(regions = c("states"), data = for_kmeans_tomap,
+#   values = "cluster", theme = theme_map(), labels = FALSE,
+#   label_color = "black") + 
+#   scale_fill_manual(values=c("red","blue","grey","white"))
+# 
+# 
+# for_kmeans_tomap %>% ggplot(aes(x=medianabv, y=nStyles, col=cluster)) +
+#   geom_point()
 
 
 ```
