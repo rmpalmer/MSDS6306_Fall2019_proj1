@@ -4,7 +4,7 @@ output: html_document
 ---
 
 ```{r question8, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(class)
 library(caret)

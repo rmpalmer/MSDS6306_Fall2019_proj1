@@ -4,7 +4,7 @@ output: html_document
 ---
 
 ```{r question6, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
@@ -32,10 +32,9 @@ merged %>%
   geom_density(alpha=.2,fill="#FF6666")
 ```
 
-The histogram bears this out.
+The histogram bears this out, as does a box plot
 
 ```{r}
-
 merged %>%
   ggplot(aes(x="",y=ABVfill)) +
   geom_boxplot() +
@@ -46,3 +45,23 @@ merged %>%
   theme(aspect.ratio = 2.0) +
   coord_cartesian(ylim=c(0,0.15))
 ```
+
+To investigate whether the ABV values are normally distributed, we do
+a Q-Q plot.  This is a plot of the quantiles of the actual data against
+what would be expected from a normal distribution.  If the data do
+follow a normal distribution, the plot would show a straight line.  The
+more the plot deviates from a straight line, the less closely 
+the data follow a normal distribution.
+
+```{r}
+merged %>% 
+  ggplot(aes(sample=ABVfill)) +
+  stat_qq() + stat_qq_line() + 
+  ggtitle('Quantile-Quantile plot of (infilled) ABV data')
+```
+
+From the upward curve in this plot, we infer that the data are somewhat skewed.
+This confirms what the histogram shows.  The apparent discontinuities at the
+ends of the curve are an indication that the ABV values have a few more extreme
+values than would be expected from a normal distribution.  This confirms what
+was shown in the box plot.

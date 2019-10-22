@@ -4,7 +4,7 @@ output: html_document
 ---
 
 ```{r question4, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 
 library(usmap)
@@ -13,7 +13,8 @@ library(ggthemes)
 ```
 
 # Question 4
-Compute the Median alcohol content for all the beers in each state
+Compute the Median alcohol content for all the beers in each state.
+
 ```{r}
 # drop any observations without valid ABV values, group by state, and compute the median
 abv_df <- merged %>% group_by(State) %>% 
@@ -21,21 +22,35 @@ abv_df <- merged %>% group_by(State) %>%
 
 # order by median ABV
 abv_df$State <- factor(abv_df$State,level=abv_df$State[order(abv_df$median_abvfill,decreasing=TRUE)])
+```
 
-# ..and replot
+Here are the original data, with missing observations dropped:
+
+```{r}
+# ..and plot
 abv_df %>% ggplot(aes(x=State,y=median_abv)) + 
   geom_col(color="#13294b",fill="#C8102E") + 
   theme(aspect.ratio = 0.2,axis.text=element_text(size=4)) +
   ylab('Median ABV') + 
   ggtitle('Median ABV by state (missing values dropped)')
 
+```
+
+and here is the same plot, with missing values infilled.
+Note that the ordering of states is the same for these two graphs.
+
+```{r}
 abv_df %>% ggplot(aes(x=State,y=median_abvfill)) + 
   geom_col(color="#13294b",fill="#C8102E") + 
   theme(aspect.ratio = 0.2,axis.text=element_text(size=4)) +
   ylab('Median ABV') + 
   ggtitle('Median ABV by state (missing values infilled)')
+```
 
-# change up a bit to make a map [Sorry about that, Richard. If I would have been thinking a little more strategically, I would have set up the mapping bits to be a little more user friendly. - Steve]
+Here is the same data, with each state colored by the its ABV value.
+
+```{r}
+# change up a bit to make a map
 abv_df$State <- str_trim(abv_df$State, "left")
 
 colnames(abv_df)[1] = "abbr"
@@ -48,11 +63,11 @@ plot_usmap(regions = c("states"), data = abv_by_state_tomap,
   label_color = "black") +
   scale_fill_continuous(name = "ABV", low="ivory", high="#c8102e") +
   theme(legend.position="right") +
-  labs(title = 'Median ABV of beers by state')
+  labs(title = 'Median ABV of beers by state, infilled data')
 
 ```
 
-Median Bitterness unit for all the beers in each state
+Compute the median Bitterness unit for all the beers in each state
 ```{r}
 # drop any obsvervations without valid IBU values, roup by state, and compute the median
 ibu_df <- merged %>% group_by(State) %>% 
@@ -60,21 +75,33 @@ ibu_df <- merged %>% group_by(State) %>%
 
 # order by median IBU
 ibu_df$State <- factor(ibu_df$State,level=ibu_df$State[order(ibu_df$median_ibufill,decreasing=TRUE)])
+```
 
-# ..and replot
+Here are the original data, with missing observations dropped:
+
+```{r}
+# ..and plot
 ibu_df %>% ggplot(aes(x=State,y=median_ibu)) +
   geom_col(color="#13294b",fill="#C8102E") + 
   theme(aspect.ratio = 0.2,axis.text=element_text(size=4)) +
   ylab('Median IBU') + 
   ggtitle('Median IBU by state (missing values dropped)')
+```
 
+and here is the same plot, with missing values infilled.
+Note that the ordering of states is the same for these two graphs.
+
+```{r}
 ibu_df %>% ggplot(aes(x=State,y=median_ibufill)) +
   geom_col(color="#13294b",fill="#C8102E") + 
   theme(aspect.ratio = 0.2,axis.text=element_text(size=4)) +
   ylab('Median IBU') + 
   ggtitle('Median IBU by state (missing values infilled)')
+```
 
+Here is the same data, with each state colored by the its ABV value.
 
+```{r}
 # change a bit to make a map
 ibu_df$State <- str_trim(ibu_df$State, "left")
 
