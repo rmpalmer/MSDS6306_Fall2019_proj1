@@ -47,7 +47,7 @@ abv_df %>% ggplot(aes(x=State,y=median_abvfill)) +
   ggtitle('Median ABV by state (missing values infilled)')
 ```
 
-Here is the same data, with each state colored by the its ABV value.
+Here is the same data, with each state colored by the its median ABV value.
 
 ```{r}
 # change up a bit to make a map
@@ -67,7 +67,7 @@ plot_usmap(regions = c("states"), data = abv_by_state_tomap,
 
 ```
 
-Compute the median Bitterness unit for all the beers in each state
+Compute the median bitterness unit for all the beers in each state
 ```{r}
 # drop any obsvervations without valid IBU values, roup by state, and compute the median
 ibu_df <- merged %>% group_by(State) %>% 
@@ -99,7 +99,7 @@ ibu_df %>% ggplot(aes(x=State,y=median_ibufill)) +
   ggtitle('Median IBU by state (missing values infilled)')
 ```
 
-Here is the same data, with each state colored by the its ABV value.
+Here is the same data, with each state colored by the its median IBU value.
 
 ```{r}
 # change a bit to make a map
