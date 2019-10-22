@@ -4,7 +4,7 @@ output: html_document
 ---
 
 ```{r question8, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(class)
 library(caret)
@@ -14,6 +14,7 @@ library(pracma)
 # shared variables
 q8_colors = c("#C8102E", "#13294b")
 iterations <- 100
+positive_value <- 'Other'
 ```
 
 # Question 8
@@ -122,7 +123,7 @@ Make a constant classifier and check its performance.
 size = nrow(infill_normalized)
 always_ipa <- data.frame(sample(x=as.factor(c('IPA','Other')),size,replace=TRUE,prob=c(0,1)))
 colnames(always_ipa) <- c('guess')
-CM_always <- confusionMatrix(always_ipa$guess,infill_normalized$category)
+CM_always <- confusionMatrix(always_ipa$guess,infill_normalized$category,positive=positive_value)
 always_acc <- CM_always$overall[1] # accuracy
 always_sens <- CM_always$byClass[1] # sensitivity
 always_spec <- CM_always$byClass[2] # specificity
@@ -148,7 +149,7 @@ for (j in 1:iterations)
 {
   guess <- data.frame(sample(x=as.factor(c('IPA','Other')),size,replace=TRUE,prob=c(ipa_count,other_count)))
   colnames(guess) <- c('guess')
-  CM_guess <- confusionMatrix(guess$guess,infill_normalized$category)
+  CM_guess <- confusionMatrix(guess$guess,infill_normalized$category,positive=positive_value)
   acc_guess[j,1] <- CM_guess$overall[1] # accuracy
   acc_guess[j,2] <- CM_guess$byClass[1] # sensitivity
   acc_guess[j,3] <- CM_guess$byClass[2] # specificity
@@ -219,7 +220,7 @@ for (j in 1:iterations)
   testBeer = infill_normalized[-trainIndices,]
   model_nb <- naiveBayes(trainBeer[,pred_indices],trainBeer$category)
   CM_nb <- confusionMatrix(table(predict(model_nb,testBeer[,pred_indices]),
-                                as.factor(testBeer$category)))
+                                as.factor(testBeer$category)),positive=positive_value)
                           
   acc_nb[j,1] <- CM_nb$overall[1] # accuracy
   acc_nb[j,2] <- CM_nb$byClass[1] # sensitivity
@@ -284,7 +285,7 @@ for (i in 1:numks)
     classifications = knn(train[,cols_for_knn],
                               test[,cols_for_knn],
                               as.factor(train$category), prob = TRUE, k = i)
-    CM = confusionMatrix(table(as.factor(test$category),classifications))
+    CM = confusionMatrix(table(as.factor(test$category),classifications),positive=positive_value)
     acc[j]  = CM$overall[1]
     sens[j] = CM$byClass[1]
     spec[j] = CM$byClass[2]
@@ -362,5 +363,16 @@ with_pred <- cbind(infill_normalized,knn_pred)
 with_pred %>% ggplot(aes(x=IBU,y=ABV,color=knn_pred)) + geom_point() + ggtitle('Predicted Class') +
   scale_color_manual(breaks = c("IPA", "Other"),
                         values=q8_colors)
+CM_knn = confusionMatrix(table(as.factor(infill_normalized$category),knn_pred),positive=positive_value)
+knn_acc <- CM_knn$overall[1] # accuracy
+knn_sens <- CM_knn$byClass[1] # sensitivity
+knn_spec <- CM_knn$byClass[2] # specificity
 ```
+
+KNN accuracy turns out to be `r format(100*knn_acc,digits=2)` %.
+
+KNN sensitivity is `r format(100*knn_sens,digits=2)` %.
+
+KNN specificity is `r format(100*knn_spec,digits=2)` %.
+
 
