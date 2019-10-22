@@ -1,7 +1,7 @@
 ---
 title: "FinalReport"
-author: "Steven Garrity + Richard Palmer"
-date: "10/26/2019"
+author: "Steven Garrity and Richard Palmer"
+date: "26 October 2019"
 output: html_document
 ---
 
@@ -11,6 +11,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r child = 'dataload.Rmd'}
 ```
+
+# Prepared for
+
+Prepared for CEO and CFO of Budweiser, a subsidiary of Anheuser-Busch.  
+
+Case Study 1 project for DS6306 Section 408  Fall 2019  Dr. Bivin Sadler
 
 # Introduction
 
@@ -49,3 +55,6 @@ interest to a hypothetical sponsor, Budweiser.
 #```{r child = 'question9.Rmd'}
 #```
 
+# Conclusion
+
+We have evaluated the available data, and determined that we should drink more beer.
