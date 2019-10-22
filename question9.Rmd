@@ -73,6 +73,14 @@ q9$belowperCapita[which(q9$nBreweriesPerCapita < median(q9$nBreweriesPerCapita, 
 q9$target <- "no"
 q9$target[which(q9$gt5M == "gt5M" & q9$belowperCapita == "ltMedian")] = "yes"
 
+# state land area in square miles
+temp <- data.frame(State = state.abb, LandArea = state.area)
+q9 <- merge(q9,temp, by="State")
+
+q9$nStylesPerCapita <- q9$nStyles/(q9$pop_2015/1000000)
+q9$PopulationPerSqMile <- q9$pop_2015/q9$LandArea
+q9$nBreweriesPerSqMile <- q9$breweryCount/(q9$LandArea/1000)
+
 # intersection of population and breweries per capita
 q9$popular1st <- "N/A"
 q9$popular1st[which(q9$gt5M == "gt5M" & q9$belowperCapita == "ltMedian")] = 
@@ -142,9 +150,116 @@ plot_usmap(regions = c("states"), data = q9,
   labs(title = 'Most Frequent Beer Style')
 
 
+##########
+### retry k-means with new variables
+forkmeans <- q9 %>% select(nBreweriesPerCapita, nBreweriesPerSqMile, nStylesPerCapita)
+row.names(forkmeans) <- q9$State
+
+# # k-means clustering
+# # find optimal "k"
+# library(factoextra)
+fviz_nbclust(forkmeans, kmeans, method="wss")
+# 
+set.seed(10)
+brewsCluster <- kmeans(forkmeans, 2, nstart=20)
+str(brewsCluster)
+brewsCluster$cluster
+cluster_container = c()
+for (i in 1:length(brewsCluster$cluster))
+{
+  cluster_container[i] <- brewsCluster$cluster[[i]]
+}
+# visualize clusters plotted with Principle Component (?) axes
+fviz_cluster(brewsCluster, forkmeans)
+
+forkmeans_tomap <- forkmeans
+forkmeans_tomap$cluster <- cluster_container
+# forkmeans_tomap$fips <- statesvar
+forkmeans_tomap$state <- q9$State
+forkmeans_tomap$cluster <- as.factor(forkmeans_tomap$cluster)
+
+# # 
+plot_usmap(regions = c("states"), data = forkmeans_tomap,
+  values = "cluster", theme = theme_map(), labels = FALSE,
+  label_color = "black") +
+  scale_fill_manual(values=c("red","blue","grey","white"))
+
+forkmeans_tomap %>% ggplot(aes(x=nBreweriesPerSqMile, y=nStylesPerCapita, col=cluster)) +
+  geom_point()
 
 
+##########
+##########
+##########
 
+##########
+### retry k-means with new variables
+
+ia_ratio <- merged %>%
+  group_by(State) %>%
+  summarize(ia_ratio = median(ratio, na.rm=TRUE))
+medianabv <- merged %>%
+  group_by(State) %>%
+  summarize(medianabv = median(ABV, na.rm=TRUE))
+medianibu <- merged %>%
+  group_by(State) %>%
+  summarize(medianibu = median(IBU, na.rm=TRUE))
+
+m1 <- merge(ia_ratio, medianabv, by="State")
+m2 <- merge(m1, medianibu, by="State")
+q9 <- merge(q9, m2, by="State")
+
+
+forkmeans <- q9 %>% select(nBreweriesPerSqMile,nStyles, medianabv, medianibu, ia_ratio)
+row.names(forkmeans) <- q9$State
+forkmeans$target <- NA
+forkmeans$target[which(q9$target == "yes")] = 1
+
+forkmeans <- na.omit(forkmeans)
+forkmeans$target <- NULL
+
+# # k-means clustering
+# # find optimal "k"
+# library(factoextra)
+fviz_nbclust(forkmeans, kmeans, method="wss")
+# 
+set.seed(10)
+brewsCluster <- kmeans(forkmeans, 3, nstart=20)
+str(brewsCluster)
+brewsCluster$cluster
+cluster_container = c()
+for (i in 1:length(brewsCluster$cluster))
+{
+  cluster_container[i] <- brewsCluster$cluster[[i]]
+}
+# visualize clusters plotted with Principle Component (?) axes
+fviz_cluster(brewsCluster, forkmeans)
+
+forkmeans_tomap <- forkmeans
+forkmeans_tomap$cluster <- cluster_container
+# forkmeans_tomap$fips <- statesvar
+forkmeans_tomap$state <- q9$State[which(q9$target == "yes")]
+forkmeans_tomap$nStylesPerCapita <- q9$nStylesPerCapita[which(q9$target == "yes")]
+forkmeans_tomap$cluster <- as.factor(forkmeans_tomap$cluster)
+
+# # 
+plot_usmap(regions = c("states"), data = forkmeans_tomap,
+  values = "cluster", theme = theme_map(), labels = FALSE,
+  label_color = "black") +
+  scale_fill_manual(values=c("red","blue","grey","white")) +
+  labs(title = "K-Means Clustering of Target States")
+
+forkmeans_tomap %>% ggplot(aes(x=medianabv, y=medianibu, col=cluster, label=row.names(forkmeans_tomap))) +
+  geom_text() +
+  labs(x='median ABV', y = 'median IBU')
+
+forkmeans_tomap %>% ggplot(aes(x=nStylesPerCapita, y=nStyles, col=cluster, label=row.names(forkmeans_tomap))) +
+  geom_text() +
+  labs(x='Styles per Capita', y = 'Number of Styles Currently Brewed')
+
+forkmeans_tomap %>% ggplot(aes(x=medianibu, y=ia_ratio, col=cluster, label=row.names(forkmeans_tomap))) +
+  geom_text() +
+  labs(x='Styles per Capita', y = 'Number of Styles Currently Brewed')
 
 ###############################################
 #### old junk...something might be useful later
