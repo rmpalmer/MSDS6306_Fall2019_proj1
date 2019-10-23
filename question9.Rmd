@@ -24,16 +24,17 @@ style_count %>% filter(n > 50) %>% ggplot(aes(x=reorder(Style, desc(n)), y = n))
   labs(title="10 Most Common Styles of Craft Brews", x="", y="Count")
 
 # 1. find the most popular beers in each state
-# 2. find the states that have lower than average breweries per capita
+# 2. find the states that have lower than median breweries per capita
 # 3. find states with > 5M total population
-# 4. identify the 1st, 2nd, and 3rd most popular beers in those states
+# 4. identify the most popular beer style in each of those states
+# 5. run k-means clustering to group states by feature combinations
 
 # get the 1st, 2nd, and 3rd most popular beers per state
 stateabbr <- unique(merged$State)
 popular1 <- c()
 popular2 <- c()
 popular3 <- c()
-for (i in 1:length(states))
+for (i in 1:length(stateabbr))
 {
   temp <- merged %>% 
     filter(State==stateabbr[i]) %>% 
@@ -150,7 +151,8 @@ plot_usmap(regions = c("states"), data = q9,
   labs(title = 'Most Frequent Beer Style')
 
 
-##########
+##################################################
+### https://uc-r.github.io/kmeans_clustering
 ### retry k-means with new variables
 forkmeans <- q9 %>% select(nBreweriesPerCapita, nBreweriesPerSqMile, nStylesPerCapita)
 row.names(forkmeans) <- q9$State
@@ -211,6 +213,8 @@ q9 <- merge(q9, m2, by="State")
 
 
 forkmeans <- q9 %>% select(nBreweriesPerSqMile,nStyles, medianabv, medianibu, ia_ratio)
+# forkmeans <- q9 %>% select(nBreweriesPerSqMile,nStylesPerCapita, medianabv, medianibu, ia_ratio)
+
 row.names(forkmeans) <- q9$State
 forkmeans$target <- NA
 forkmeans$target[which(q9$target == "yes")] = 1
@@ -221,7 +225,7 @@ forkmeans$target <- NULL
 # # k-means clustering
 # # find optimal "k"
 # library(factoextra)
-fviz_nbclust(forkmeans, kmeans, method="wss")
+fviz_nbclust(forkmeans, kmeans, method="silhouette")
 # 
 set.seed(10)
 brewsCluster <- kmeans(forkmeans, 3, nstart=20)
@@ -253,100 +257,11 @@ forkmeans_tomap %>% ggplot(aes(x=medianabv, y=medianibu, col=cluster, label=row.
   geom_text() +
   labs(x='median ABV', y = 'median IBU')
 
-forkmeans_tomap %>% ggplot(aes(x=nStylesPerCapita, y=nStyles, col=cluster, label=row.names(forkmeans_tomap))) +
+forkmeans_tomap %>% ggplot(aes(x=nBreweriesPerSqMile, y=nStylesPerCapita, col=cluster, label=row.names(forkmeans_tomap))) +
   geom_text() +
   labs(x='Styles per Capita', y = 'Number of Styles Currently Brewed')
 
 forkmeans_tomap %>% ggplot(aes(x=medianibu, y=ia_ratio, col=cluster, label=row.names(forkmeans_tomap))) +
   geom_text() +
   labs(x='Styles per Capita', y = 'Number of Styles Currently Brewed')
-
-###############################################
-#### old junk...something might be useful later
-# 
-# 
-# merged$ratio <- merged$IBU/(merged$ABV*100)
-# ia_ratio <- merged %>% 
-#   group_by(State) %>% 
-#   summarize(ia_ratio = median(ratio, na.rm=TRUE))
-# medianabv <- merged %>% 
-#   group_by(State) %>% 
-#   summarize(medianabv = median(ABV, na.rm=TRUE))
-# medianibu <- merged %>%
-#   group_by(State) %>%
-#   summarize(medianibu = median(IBU, na.rm=TRUE))
-# nStyles <- merged %>%
-#   group_by(State) %>%
-#   summarize(nStyles = n_distinct(Style))
-# 
-# brewerycount <- breweries_raw %>%  group_by(State) %>% summarize(count = n())
-# brewerycount$perCapita <- brewerycount$count/(statepop$pop_2015/1000000)
-# # brewerycount$StatePop <- statepop$pop_2015
-# brewerycount$count <- NULL
-# 
-# ia_ratio$State <- as.character(ia_ratio$State)
-# medianabv$State <- as.character(medianabv$State)
-# medianibu$State <- as.character(medianibu$State)
-# nStyles$State <- as.character(nStyles$State)
-# brewerycount$State <- as.character(brewerycount$State)
-# 
-# m1 <- merge(ia_ratio, medianabv, by="State")
-# m2 <- merge(medianibu, nStyles, by="State")
-# m3 <- merge(m2, brewerycount, by="State")
-# mergedstates <- merge(m1,m3, by="State")
-# 
-# # change the row names to the state abbreviation
-# mergedstates$State <- str_trim(mergedstates$State, "left")
-# # row.names(mergedstates) <- mergedstates$State
-# # mergedstates$State <- NULL
-# for_kmeans <- mergedstates %>% drop_na()
-# statesvar <- for_kmeans$State
-# row.names(for_kmeans) <- for_kmeans$State
-# for_kmeans$State <- NULL
-# 
-# # k-means clustering
-# # find optimal "k"
-# # library(factoextra)
-# fviz_nbclust(for_kmeans, kmeans, method="silhouette")
-# 
-# set.seed(10)
-# brewsCluster <- kmeans(for_kmeans, 4, nstart=20)
-# str(brewsCluster)
-# brewsCluster$cluster
-# cluster_container = c()
-# for (i in 1:length(brewsCluster$cluster))
-# {
-#   cluster_container[i] <- brewsCluster$cluster[[i]]
-# }
-# 
-# 
-# 
-# 
-# fviz_cluster(brewsCluster, for_kmeans)
-# 
-# 
-# 
-# 
-# 
-# #### mapping
-# library(usmap)
-# library(ggthemes)
-# 
-# for_kmeans_tomap <- for_kmeans
-# for_kmeans_tomap$cluster <- cluster_container
-# # for_kmeans_tomap$fips <- statesvar
-# for_kmeans_tomap$state <- breweries_by_state_tomap$state
-# for_kmeans_tomap$cluster <- as.factor(for_kmeans_tomap$cluster)
-# 
-# # 
-# plot_usmap(regions = c("states"), data = for_kmeans_tomap,
-#   values = "cluster", theme = theme_map(), labels = FALSE,
-#   label_color = "black") + 
-#   scale_fill_manual(values=c("red","blue","grey","white"))
-# 
-# 
-# for_kmeans_tomap %>% ggplot(aes(x=medianabv, y=nStyles, col=cluster)) +
-#   geom_point()
-
-
 ```
