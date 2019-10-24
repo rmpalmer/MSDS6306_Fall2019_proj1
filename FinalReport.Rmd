@@ -52,8 +52,8 @@ interest to a hypothetical sponsor, Budweiser.
 ```{r child = 'question8.Rmd'}
 ```
 
-#```{r child = 'question9.Rmd'}
-#```
+```{r child = 'question9.Rmd'}
+```
 
 # Conclusion
 
