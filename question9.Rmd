@@ -8,6 +8,7 @@ editor_options:
 ```{r question9, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(BBmisc)
 ```
 
 # Question 9
@@ -197,6 +198,8 @@ forkmeans_tomap %>% ggplot(aes(x=nBreweriesPerSqMile, y=nStylesPerCapita, col=cl
 ##########
 ### retry k-means with new variables
 
+merged$ratio <- merged$IBU/merged$ABV
+
 ia_ratio <- merged %>%
   group_by(State) %>%
   summarize(ia_ratio = median(ratio, na.rm=TRUE))
@@ -211,24 +214,43 @@ m1 <- merge(ia_ratio, medianabv, by="State")
 m2 <- merge(m1, medianibu, by="State")
 q9 <- merge(q9, m2, by="State")
 
+nBreweries <- merged %>%
+  group_by(State) %>%
+  summarize(nBreweries = length(unique(as.character(Brewery_name))))
 
-forkmeans <- q9 %>% select(nBreweriesPerSqMile,nStyles, medianabv, medianibu, ia_ratio)
+q9 <- merge(q9,nBreweries, by="State")
+q9$nStylesPerBrewery <- q9$nStyles/q9$nBreweries
+
+
+forkmeans <- q9 %>% select(medianabv, medianibu, ia_ratio, nStylesPerCapita)
 # forkmeans <- q9 %>% select(nBreweriesPerSqMile,nStylesPerCapita, medianabv, medianibu, ia_ratio)
 
+# https://www.rdocumentation.org/packages/BBmisc/versions/1.10/topics/normalize
+# library(BBmisc)
+forkmeans_s <- normalize(forkmeans, method = "standardize")
+
+row.names(forkmeans_s) <- q9$State
 row.names(forkmeans) <- q9$State
+
+forkmeans_s$target <- NA
 forkmeans$target <- NA
+forkmeans_s$target[which(q9$target == "yes")] = 1
 forkmeans$target[which(q9$target == "yes")] = 1
 
 forkmeans <- na.omit(forkmeans)
+forkmeans_s <- na.omit(forkmeans_s)
+
 forkmeans$target <- NULL
+forkmeans_s$target <- NULL
+
 
 # # k-means clustering
 # # find optimal "k"
 # library(factoextra)
-fviz_nbclust(forkmeans, kmeans, method="silhouette")
+fviz_nbclust(forkmeans_s, kmeans, method="wss")
 # 
 set.seed(10)
-brewsCluster <- kmeans(forkmeans, 3, nstart=20)
+brewsCluster <- kmeans(forkmeans_s, 4, nstart=20)
 str(brewsCluster)
 brewsCluster$cluster
 cluster_container = c()
@@ -237,7 +259,7 @@ for (i in 1:length(brewsCluster$cluster))
   cluster_container[i] <- brewsCluster$cluster[[i]]
 }
 # visualize clusters plotted with Principle Component (?) axes
-fviz_cluster(brewsCluster, forkmeans)
+fviz_cluster(brewsCluster, forkmeans_s)
 
 forkmeans_tomap <- forkmeans
 forkmeans_tomap$cluster <- cluster_container
@@ -250,18 +272,14 @@ forkmeans_tomap$cluster <- as.factor(forkmeans_tomap$cluster)
 plot_usmap(regions = c("states"), data = forkmeans_tomap,
   values = "cluster", theme = theme_map(), labels = FALSE,
   label_color = "black") +
-  scale_fill_manual(values=c("red","blue","grey","white")) +
+  scale_fill_manual(values=c("red","blue","yellow","green", "white")) +
   labs(title = "K-Means Clustering of Target States")
 
 forkmeans_tomap %>% ggplot(aes(x=medianabv, y=medianibu, col=cluster, label=row.names(forkmeans_tomap))) +
   geom_text() +
   labs(x='median ABV', y = 'median IBU')
 
-forkmeans_tomap %>% ggplot(aes(x=nBreweriesPerSqMile, y=nStylesPerCapita, col=cluster, label=row.names(forkmeans_tomap))) +
-  geom_text() +
-  labs(x='Styles per Capita', y = 'Number of Styles Currently Brewed')
-
-forkmeans_tomap %>% ggplot(aes(x=medianibu, y=ia_ratio, col=cluster, label=row.names(forkmeans_tomap))) +
+forkmeans_tomap %>% ggplot(aes(x=nStylesPerCapita, y=ia_ratio, col=cluster, label=row.names(forkmeans_tomap))) +
   geom_text() +
   labs(x='Styles per Capita', y = 'Number of Styles Currently Brewed')
 ```
