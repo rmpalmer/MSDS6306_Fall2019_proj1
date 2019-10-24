@@ -56,7 +56,7 @@ library(ggthemes)
 plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
   values = "count", theme = theme_map(), labels = FALSE,
   label_color = "black") +
-  scale_fill_continuous(name = "n", low="ivory", high="#c8102e") +
+  scale_fill_continuous(name = "n", low="white", high="#c8102e") +
   theme(legend.position="right") +
   labs(title = 'Number of Breweries in each state')
 
@@ -64,7 +64,7 @@ plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
 plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
   values = "perCapita", theme = theme_map(), labels = FALSE,
   label_color = "black") +
-  scale_fill_continuous(name = "n*", low="ivory", high="#13294b") +
+  scale_fill_continuous(name = "n*", low="white", high="#13294b") +
   theme(legend.position="right", 
         plot.caption = element_text(color="navyblue", size = 8, hjust=1)) +
   labs(title = 'Breweries per Capita*', caption = "*per 1M people")
