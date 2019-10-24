@@ -9,26 +9,25 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(BBmisc)
+library(factoextra)
 ```
 
 # Question 9
-Knocking their socks off.
+Knocking their socks off:
+1. find the most popular beers in each state
+2. find the states that have lower than median breweries per capita
+3. find states with > 5M total population
+5. run k-means clustering to group selected states by feature combinations
 ```{r}
 #cleaning house:
 merged$State <- str_trim(merged$State, "left")
 
 # basic EDA
-style_count <- merged %>% group_by(Style) %>% summarize(n = n()) %>% arrange(desc(n))
-style_count %>% filter(n > 50) %>% ggplot(aes(x=reorder(Style, desc(n)), y = n)) +
-  geom_bar(stat="identity", fill = "#C8102E") +
-  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
-  labs(title="10 Most Common Styles of Craft Brews", x="", y="Count")
-
-# 1. find the most popular beers in each state
-# 2. find the states that have lower than median breweries per capita
-# 3. find states with > 5M total population
-# 4. identify the most popular beer style in each of those states
-# 5. run k-means clustering to group states by feature combinations
+# style_count <- merged %>% group_by(Style) %>% summarize(n = n()) %>% arrange(desc(n))
+# style_count %>% filter(n > 50) %>% ggplot(aes(x=reorder(Style, desc(n)), y = n)) +
+#   geom_bar(stat="identity", fill = "#C8102E") +
+#   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+#   labs(title="10 Most Common Styles of Craft Brews", x="", y="Count")
 
 # get the 1st, 2nd, and 3rd most popular beers per state
 stateabbr <- unique(merged$State)
@@ -60,7 +59,7 @@ temp <- statepop
 temp$State <- temp$abbr
 q9 <- merge(q9,temp, by="State")
 
-q9$nBreweriesPerCapita = q9$breweryCount/q9$pop_2015
+q9$nBreweriesPerCapita = q9$breweryCount/(q9$pop_2015/1000000)
 
 # which states have populations > 5,000,000
 q9$gt5M <- "lt5M"
@@ -105,98 +104,26 @@ plot_usmap(regions = c("states"), data = q9,
   values = "gt5M", theme = theme_map(), labels = FALSE,
   label_color = "black") + 
   theme(legend.position="right") +
-  scale_fill_manual(name = "", values=c("grey","white")) +
+  scale_fill_manual(name = "pop.", values=c("#b1b3b3","white"), labels = c(">5M","<5M")) +
   labs(title = 'States with Population of 5M or greater')
 
 plot_usmap(regions = c("states"), data = q9,
   values = "belowperCapita", theme = theme_map(), labels = FALSE,
   label_color = "black") + 
   theme(legend.position="right") +
-  scale_fill_manual(name = "", values=c("white","navyblue")) +
+  scale_fill_manual(name = "", values=c("white","#13294B"), labels = c(">Median","<Median")) +
   labs(title = 'States with lower than median Breweries per Capita')
 
 plot_usmap(regions = c("states"), data = q9,
   values = "target", theme = theme_map(), labels = FALSE,
   label_color = "black") + 
   theme(legend.position="right") +
-  scale_fill_manual(name = "", values=c("white","red")) +
+  scale_fill_manual(name = "", values=c("white","#C8102E")) +
   labs(title = 'States to Target')
+```
 
-plot_usmap(regions = c("states"), data = q9,
-  values = "popular1st", theme = theme_map(), labels = FALSE,
-  label_color = "black") + 
-  theme(legend.position="right") +
-  scale_fill_manual(name = "Style", values=c("white","red","blue","darkgray")) +
-  labs(title = 'Most Frequent Beer Style')
-
-plot_usmap(regions = c("states"), data = q9,
-  values = "popular2nd", theme = theme_map(), labels = FALSE,
-  label_color = "black") + 
-  theme(legend.position="right") +
-  scale_fill_manual(name = "Style", values=c("green","white","red","blue","darkgray")) +
-  labs(title = '2nd Most Frequent Beer Style')
-
-plot_usmap(regions = c("states"), data = q9,
-  values = "popular3rd", theme = theme_map(), labels = FALSE,
-  label_color = "black") + 
-  theme(legend.position="right") +
-  scale_fill_manual(name = "Style", values=c("green","white","red","blue","navyblue","red3","grey","blue4","darkgray")) +
-  labs(title = '3rd Most Frequent Beer Style')
-
-
-plot_usmap(regions = c("states"), data = q9,
-  values = "P1", theme = theme_map(), labels = FALSE,
-  label_color = "black") + 
-  theme(legend.position="right") +
-  scale_fill_manual(name = "Style", values=c("green","white","red","blue","navyblue","red3","grey","blue4","seagreen1","darkgray","slateblue3","yellow2")) +
-  labs(title = 'Most Frequent Beer Style')
-
-
-##################################################
-### https://uc-r.github.io/kmeans_clustering
-### retry k-means with new variables
-forkmeans <- q9 %>% select(nBreweriesPerCapita, nBreweriesPerSqMile, nStylesPerCapita)
-row.names(forkmeans) <- q9$State
-
-# # k-means clustering
-# # find optimal "k"
-# library(factoextra)
-fviz_nbclust(forkmeans, kmeans, method="wss")
-# 
-set.seed(10)
-brewsCluster <- kmeans(forkmeans, 2, nstart=20)
-str(brewsCluster)
-brewsCluster$cluster
-cluster_container = c()
-for (i in 1:length(brewsCluster$cluster))
-{
-  cluster_container[i] <- brewsCluster$cluster[[i]]
-}
-# visualize clusters plotted with Principle Component (?) axes
-fviz_cluster(brewsCluster, forkmeans)
-
-forkmeans_tomap <- forkmeans
-forkmeans_tomap$cluster <- cluster_container
-# forkmeans_tomap$fips <- statesvar
-forkmeans_tomap$state <- q9$State
-forkmeans_tomap$cluster <- as.factor(forkmeans_tomap$cluster)
-
-# # 
-plot_usmap(regions = c("states"), data = forkmeans_tomap,
-  values = "cluster", theme = theme_map(), labels = FALSE,
-  label_color = "black") +
-  scale_fill_manual(values=c("red","blue","grey","white"))
-
-forkmeans_tomap %>% ggplot(aes(x=nBreweriesPerSqMile, y=nStylesPerCapita, col=cluster)) +
-  geom_point()
-
-
-##########
-##########
-##########
-
-##########
-### retry k-means with new variables
+# K-Means Clustering of Target States (https://uc-r.github.io/kmeans_clustering)
+```{r}
 
 merged$ratio <- merged$IBU/merged$ABV
 
@@ -222,8 +149,7 @@ q9 <- merge(q9,nBreweries, by="State")
 q9$nStylesPerBrewery <- q9$nStyles/q9$nBreweries
 
 
-forkmeans <- q9 %>% select(medianabv, medianibu, ia_ratio, nStylesPerCapita)
-# forkmeans <- q9 %>% select(nBreweriesPerSqMile,nStylesPerCapita, medianabv, medianibu, ia_ratio)
+forkmeans <- q9 %>% select(medianabv, medianibu, ia_ratio, nBreweriesPerCapita)
 
 # https://www.rdocumentation.org/packages/BBmisc/versions/1.10/topics/normalize
 # library(BBmisc)
@@ -247,7 +173,7 @@ forkmeans_s$target <- NULL
 # # k-means clustering
 # # find optimal "k"
 # library(factoextra)
-fviz_nbclust(forkmeans_s, kmeans, method="wss")
+fviz_nbclust(forkmeans_s, kmeans, method="wss", linecolor = "#13294B")
 # 
 set.seed(10)
 brewsCluster <- kmeans(forkmeans_s, 4, nstart=20)
@@ -259,7 +185,11 @@ for (i in 1:length(brewsCluster$cluster))
   cluster_container[i] <- brewsCluster$cluster[[i]]
 }
 # visualize clusters plotted with Principle Component (?) axes
-fviz_cluster(brewsCluster, forkmeans_s)
+fviz_cluster(brewsCluster, forkmeans_s, labelsize = 12, 
+             repel=TRUE, show.clust.cent = FALSE, ellipse.alpha = 0.6) +
+  scale_color_manual(values = c("#C8102E", "#13294B", "darkgreen", "#b1b3b3")) +
+  scale_fill_manual(values = c("#C8102E", "#13294B", "darkgreen", "#b1b3b3"))
+  
 
 forkmeans_tomap <- forkmeans
 forkmeans_tomap$cluster <- cluster_container
@@ -269,17 +199,60 @@ forkmeans_tomap$nStylesPerCapita <- q9$nStylesPerCapita[which(q9$target == "yes"
 forkmeans_tomap$cluster <- as.factor(forkmeans_tomap$cluster)
 
 # # 
+exclude <- q9$State[which(q9$target == "no")]
+
 plot_usmap(regions = c("states"), data = forkmeans_tomap,
   values = "cluster", theme = theme_map(), labels = FALSE,
   label_color = "black") +
-  scale_fill_manual(values=c("red","blue","yellow","green", "white")) +
-  labs(title = "K-Means Clustering of Target States")
+  theme(legend.position = "right") +
+  guides(fill=guide_legend(title="cluster")) +
+  scale_fill_manual(labels = c("1", "2", "3", "4"), 
+                    values = c("#C8102E", "#13294B", "darkgreen", "#b1b3b3")) +
+  labs(title="K-Means Clustering of Target States")
 
-forkmeans_tomap %>% ggplot(aes(x=medianabv, y=medianibu, col=cluster, label=row.names(forkmeans_tomap))) +
-  geom_text() +
-  labs(x='median ABV', y = 'median IBU')
+forkmeans_tomap %>% ggplot(aes(x=medianabv, y=medianibu, col=cluster, fill = cluster, label=row.names(forkmeans_tomap))) +
+  geom_text(size=5) +
+  geom_label() +
+  scale_fill_manual(values = c("#C8102E", "#13294B", "darkgreen", "#b1b3b3")) +
+  scale_color_manual(values = c("white", "white", "white", "white")) +
+  labs(title = "Median ABV v Median IBU", x='median ABV', y = 'median IBU')
 
-forkmeans_tomap %>% ggplot(aes(x=nStylesPerCapita, y=ia_ratio, col=cluster, label=row.names(forkmeans_tomap))) +
-  geom_text() +
-  labs(x='Styles per Capita', y = 'Number of Styles Currently Brewed')
+forkmeans_tomap %>% ggplot(aes(x=nBreweriesPerCapita, y=ia_ratio, 
+                               col=cluster, fill = cluster, label=row.names(forkmeans_tomap))) +
+  geom_text(size=5) +
+  geom_label() +
+  scale_fill_manual(values = c("#C8102E", "#13294B", "darkgreen", "#b1b3b3")) +
+  scale_color_manual(values = c("white", "white", "white", "white")) +
+  labs(title = "Breweries per Capita v IBU:ABV ratio", x='Breweries per Capita (per 1M people)', y = 'IBU:ABV ratio')
+```
+
+# Additional maps (muted):
+```{r}
+# plot_usmap(regions = c("states"), data = q9,
+#   values = "popular1st", theme = theme_map(), labels = FALSE,
+#   label_color = "black") + 
+#   theme(legend.position="right") +
+#   scale_fill_manual(name = "Style", values=c("white","red","blue","darkgray")) +
+#   labs(title = 'Most Frequent Beer Style')
+# 
+# plot_usmap(regions = c("states"), data = q9,
+#   values = "popular2nd", theme = theme_map(), labels = FALSE,
+#   label_color = "black") + 
+#   theme(legend.position="right") +
+#   scale_fill_manual(name = "Style", values=c("green","white","red","blue","darkgray")) +
+#   labs(title = '2nd Most Frequent Beer Style')
+# 
+# plot_usmap(regions = c("states"), data = q9,
+#   values = "popular3rd", theme = theme_map(), labels = FALSE,
+#   label_color = "black") + 
+#   theme(legend.position="right") +
+#   scale_fill_manual(name = "Style", values=c("green","white","red","blue","navyblue","red3","grey","blue4","darkgray")) +
+#   labs(title = '3rd Most Frequent Beer Style')
+# 
+# plot_usmap(regions = c("states"), data = q9,
+#   values = "P1", theme = theme_map(), labels = FALSE,
+#   label_color = "black") + 
+#   theme(legend.position="right") +
+#   scale_fill_manual(name = "Style", values=c("green","white","red","blue","navyblue","red3","grey","blue4","seagreen1","darkgray","slateblue3","yellow2")) +
+#   labs(title = 'Most Frequent Beer Style')
 ```
