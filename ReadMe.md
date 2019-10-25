@@ -27,5 +27,5 @@ Question8.Rmd
 Question9.Rmd  
 
 Final products:  
-FinalReport.html (as generated from the above markdown files)
+FinalReport.html (as generated from the above markdown files)  
 CaseStudy_Palmer_Garrity.pptx (created manually, using figures and text copied from FinalReport.html)
