@@ -4,20 +4,23 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
-
-```{r question9, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
-library(BBmisc)
-library(factoextra)
-```
-
 # Question 9
 Knocking their socks off:
 1. find the most popular beers in each state
 2. find the states that have lower than median breweries per capita
 3. find states with > 5M total population
-5. run k-means clustering to group selected states by feature combinations
+5. run k-means clustering to group selected states by beer features
+
+```{r question9, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(usmap)
+library(ggthemes)
+library(BBmisc)
+library(factoextra)
+```
+
+# Data prep:
 ```{r}
 #cleaning house:
 merged$State <- str_trim(merged$State, "left")
@@ -94,26 +97,30 @@ q9$popular2nd[which(q9$gt5M == "gt5M" & q9$belowperCapita == "ltMedian")] =
 q9$popular3rd <- "N/A"
 q9$popular3rd[which(q9$gt5M == "gt5M" & q9$belowperCapita == "ltMedian")] = 
   as.character(q9$P3[which(q9$gt5M == "gt5M" & q9$belowperCapita == "ltMedian")])
+```
 
-####################################################
-#### mapping
-# library(usmap)
-# library(ggthemes)
-
+# Mapping states with population > 5M:
+```{r}
 plot_usmap(regions = c("states"), data = q9,
   values = "gt5M", theme = theme_map(), labels = FALSE,
   label_color = "black") + 
   theme(legend.position="right") +
   scale_fill_manual(name = "pop.", values=c("#b1b3b3","white"), labels = c(">5M","<5M")) +
   labs(title = 'States with Population of 5M or greater')
+```
 
+# Mapping states with less than median number of breweries per capita:
+```{r}
 plot_usmap(regions = c("states"), data = q9,
   values = "belowperCapita", theme = theme_map(), labels = FALSE,
   label_color = "black") + 
   theme(legend.position="right") +
   scale_fill_manual(name = "", values=c("white","#13294B"), labels = c(">Median","<Median")) +
   labs(title = 'States with lower than median Breweries per Capita')
+```
 
+# States to Target:
+```{r}
 plot_usmap(regions = c("states"), data = q9,
   values = "target", theme = theme_map(), labels = FALSE,
   label_color = "black") + 
@@ -123,6 +130,7 @@ plot_usmap(regions = c("states"), data = q9,
 ```
 
 # K-Means Clustering of Target States (https://uc-r.github.io/kmeans_clustering)
+Data prep:
 ```{r}
 
 merged$ratio <- merged$IBU/merged$ABV
@@ -168,13 +176,16 @@ forkmeans_s <- na.omit(forkmeans_s)
 
 forkmeans$target <- NULL
 forkmeans_s$target <- NULL
+```
 
-
-# # k-means clustering
-# # find optimal "k"
+# Find optimal value for "k":
+```{r}
 # library(factoextra)
 fviz_nbclust(forkmeans_s, kmeans, method="wss", linecolor = "#13294B")
-# 
+```
+
+# Fit model:
+```{r}
 set.seed(10)
 brewsCluster <- kmeans(forkmeans_s, 4, nstart=20)
 str(brewsCluster)
@@ -184,23 +195,29 @@ for (i in 1:length(brewsCluster$cluster))
 {
   cluster_container[i] <- brewsCluster$cluster[[i]]
 }
-# visualize clusters plotted with Principle Component (?) axes
+```
+
+# Visualize model output - clusters by the first two principle components:
+```{r}
 fviz_cluster(brewsCluster, forkmeans_s, labelsize = 12, 
              repel=TRUE, show.clust.cent = FALSE, ellipse.alpha = 0.6) +
   scale_color_manual(values = c("#C8102E", "#13294B", "darkgreen", "#b1b3b3")) +
   scale_fill_manual(values = c("#C8102E", "#13294B", "darkgreen", "#b1b3b3"))
-  
+```
 
+# Prep data for visualization:
+```{r}
 forkmeans_tomap <- forkmeans
 forkmeans_tomap$cluster <- cluster_container
 # forkmeans_tomap$fips <- statesvar
 forkmeans_tomap$state <- q9$State[which(q9$target == "yes")]
 forkmeans_tomap$nStylesPerCapita <- q9$nStylesPerCapita[which(q9$target == "yes")]
 forkmeans_tomap$cluster <- as.factor(forkmeans_tomap$cluster)
+```
 
-# # 
-exclude <- q9$State[which(q9$target == "no")]
-
+# Mapping clusters:
+```{r}
+#exclude <- q9$State[which(q9$target == "no")]
 plot_usmap(regions = c("states"), data = forkmeans_tomap,
   values = "cluster", theme = theme_map(), labels = FALSE,
   label_color = "black") +
@@ -209,14 +226,20 @@ plot_usmap(regions = c("states"), data = forkmeans_tomap,
   scale_fill_manual(labels = c("1", "2", "3", "4"), 
                     values = c("#C8102E", "#13294B", "darkgreen", "#b1b3b3")) +
   labs(title="K-Means Clustering of Target States")
+```
 
+# Median ABV v Median IBU:
+```{r}
 forkmeans_tomap %>% ggplot(aes(x=medianabv, y=medianibu, col=cluster, fill = cluster, label=row.names(forkmeans_tomap))) +
   geom_text(size=5) +
   geom_label() +
   scale_fill_manual(values = c("#C8102E", "#13294B", "darkgreen", "#b1b3b3")) +
   scale_color_manual(values = c("white", "white", "white", "white")) +
   labs(title = "Median ABV v Median IBU", x='median ABV', y = 'median IBU')
+```
 
+# Breweries per Capita v IBU:ABV ratio:
+```{r}
 forkmeans_tomap %>% ggplot(aes(x=nBreweriesPerCapita, y=ia_ratio, 
                                col=cluster, fill = cluster, label=row.names(forkmeans_tomap))) +
   geom_text(size=5) +
