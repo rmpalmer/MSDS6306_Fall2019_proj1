@@ -4,7 +4,7 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
-
+# Question 7 - Scatterplot of bitterness versus alcoholic content.
 ```{r question7, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
@@ -12,30 +12,38 @@ library(ggplot2)
 library(ggthemes)
 ```
 
-# Question 7
-Scatterplot of bitterness versus alcoholic content.
+# Prepare the data:
 ```{r}
-
 merged$IBUisfilled <- merged$IBU
 merged$IBUisfilled[which(is.na(merged$IBU))] <- "filled"
 merged$IBUisfilled[-which(is.na(merged$IBU))] <- "not filled"
 merged$IBUisfilled <- as.factor(merged$IBUisfilled)
+```
 
+# Fit linear model:
+```{r}
 ibu_v_abv <- lm(merged$ABVfill~merged$IBUfill)
 summary(ibu_v_abv)
+```
 
-merged %>% ggplot(aes(x=IBUfill, y=ABVfill, color=IBUisfilled)) +
-  geom_point() +
-  scale_color_manual(breaks=c("not filled","filled"), values=c("#13294b", "#b1b3b3")) +
-  geom_smooth(method='lm', col="#c8102e") +
-  labs(title='IBU v ABV', x='IBU', y='ABV', fill='IBU') +
-  theme_bw() + scale_shape_cleveland() 
+# Scatterplots:
+```{r}
+# merged %>% ggplot(aes(x=IBUfill, y=ABVfill, color=IBUisfilled)) +
+#   geom_point() +
+#   scale_color_manual(breaks=c("not filled","filled"), values=c("#13294b", "#b1b3b3")) +
+#   geom_smooth(method='lm', col="#c8102e") +
+#   labs(title='IBU v ABV', x='IBU', y='ABV', fill='IBU') +
+#   theme_bw() + scale_shape_cleveland() 
+```
 
-
-# now try with unfilled data
+# Fit linear model with unfilled data only:
+```{r}
 ibu_v_abv_nf <- lm(merged$ABV~merged$IBU)
 summary(ibu_v_abv_nf) # r2 is 0.45, vs. 0.42 (above)
+```
 
+# Scatterplot with statistics:
+```{r}
 merged %>% ggplot(aes(x=IBU, y=ABV)) +
   geom_point(col="#13294b") +
   geom_text(x=125, y=0.01, label="R2 = 0.42") +
