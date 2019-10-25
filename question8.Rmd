@@ -15,7 +15,7 @@ library(kableExtra)
 
 # shared variables
 q8_colors = c("#C8102E", "#13294b")
-iterations <- 10
+iterations <- 100
 positive_value <- 'Other'
 ```
 
