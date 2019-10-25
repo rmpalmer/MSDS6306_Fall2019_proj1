@@ -4,15 +4,14 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
-
+# Question 5 - Which state has the maximum ABV and IBU?
 ```{r question5, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(ggplot2)
 ```
 
-# Question 5
-Which state has the maximum alcoholic beer?
+# Max ABV
 ```{r}
 #run twice: 1) with missing values, 2) without missing values
 
@@ -38,10 +37,10 @@ maxABVfill$maxABV_z <- round((maxABVfill$maxABV - mean(maxABVfill$maxABV))/
 maxABVfill$maxABV_type <- ifelse(maxABVfill$maxABV_z < 0, "below", "above")  # above / below avg flag
 maxABVfill <- maxABVfill[order(maxABVfill$maxABV_z), ]  # sort
 maxABVfill$State <- factor(maxABVfill$State, levels = maxABVfill$State)  # convert to factor to retain sorted order in plot.
+```
 
-# search for budweiser products and highlight them on the graph
-
-# Diverging Barcharts
+# Diverging Barchart for ABV:
+```{r}
 ggplot(maxABVfill, aes(x=State, y=maxABV_z, label=maxABV_type)) + 
   geom_bar(stat='identity', aes(fill=maxABV_type), width=.5)  +
   scale_fill_manual(name="Maximum ABV", 
@@ -49,7 +48,10 @@ ggplot(maxABVfill, aes(x=State, y=maxABV_z, label=maxABV_type)) +
                     values = c("above"="#13294b", "below"="#b1b3b3")) + 
   labs(title= "Normalized maximum ABV by State", y="maximum ABV z-score", x="") + 
   coord_flip()
+```
 
+# Zoom in on top 5 states with the highest ABV:
+```{r}
 maxABVfill %>% filter(State == " CO" | State == " KY" | State == " IN" | State == " NY" | State == " WI") %>% ggplot(aes(x=State, y=maxABV)) + 
   geom_bar(stat='identity', fill = "#13294b", width=.9)  + 
   coord_flip() +
@@ -57,7 +59,7 @@ maxABVfill %>% filter(State == " CO" | State == " KY" | State == " IN" | State =
   labs(title= "States with the Highest ABV", x="", y="ABV") 
 ```
 
-Which state has the most bitter beer?
+# Which state has the most bitter beer?
 ```{r}
 #run twice: 1) with missing values, 2) without missing values
 maxIBUfill <- merged %>% 
@@ -77,10 +79,10 @@ maxIBUfill$maxIBU_z <- round((maxIBUfill$maxIBU - mean(maxIBUfill$maxIBU))/
 maxIBUfill$maxIBU_type <- ifelse(maxIBUfill$maxIBU_z < 0, "below", "above")  # above / below avg flag
 maxIBUfill <- maxIBUfill[order(maxIBUfill$maxIBU_z), ]  # sort
 maxIBUfill$State <- factor(maxIBUfill$State, levels = maxIBUfill$State)  # convert to factor to retain sorted order in plot.
+```
 
-# search for budweiser products and highlight them on the graph
-
-# Diverging Barcharts
+# Diverging Barchart for ABV:
+```{r}
 ggplot(maxIBUfill, aes(x=State, y=maxIBU_z, label=maxIBU_type)) + 
   geom_bar(stat='identity', aes(fill=maxIBU_type), width=.5)  +
   scale_fill_manual(name="Maximum IBU", 
@@ -88,7 +90,10 @@ ggplot(maxIBUfill, aes(x=State, y=maxIBU_z, label=maxIBU_type)) +
                     values = c("above"="#C8102E", "below"="#b1b3b3")) + 
   labs(title= "Normalized maximum IBU by State", y="maximum IBU z-score", x="") + 
   coord_flip()
+```
 
+# Zoom in on top 5 states with the highest IBU:
+```{r}
 maxIBUfill %>% filter(State == " OR" | State == " VA" | State == " MA" | State == " OH" | State == " VT") %>% ggplot(aes(x=State, y=maxIBU)) + 
   geom_bar(stat='identity', fill = "#C8102E", width=.9)  + 
   coord_flip() +
@@ -96,11 +101,8 @@ maxIBUfill %>% filter(State == " OR" | State == " VA" | State == " MA" | State =
   labs(title= "States with the Highest IBU", x="", y="IBU") 
 ```
 
-In case we want to map:
+# In case we want to map:
 ```{r}
-#########################################
-
-# # lets do some mapping
 # states_and_dc <- tibble(state = state.name) %>%
 #    bind_cols(tibble(abbr = state.abb)) %>% 
 #    bind_rows(tibble(state = "District of Columbia", abbr = "DC"))
