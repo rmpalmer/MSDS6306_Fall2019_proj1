@@ -57,4 +57,27 @@ interest to a hypothetical sponsor, Budweiser.
 
 # Conclusion
 
-We have evaluated the available data, and determined that we should drink more beer.
+It is clear that the craft beer segment of the industry has taken hold across the country.
+There are moderate but clear differences between states in the characteristics of beers.
+
+Examining available measurements of craft beers, we have found statistically significant
+differences in ABV and IBU between different classes of ales.
+
+Looking at the number of breweries in each state, along with population, we have found
+eleven states that represent a potentially underserved market.  Considering the beers 
+that are currently marketed in those states, we have identified four distinct groups of
+states with similar tastes.  Based on the characteristics of beers that are popular in 
+those states, we believe three new labels with appropriate styles could do well in the
+underserved market.  Here is our recommendation:
+
+```{r}
+library(knitr)
+library(kableExtra)
+market <- c('GA,FL,NY','MO,TX,MD,IL,TN,OH,CA','NJ')
+style <- c('IPA','Higher Alcohol Ale','Lower Alcohol Ale')
+recommendation <- data.frame(market,style)
+colnames(recommendation) <- c('Target Marget','Suggested Beer Style')
+kable(recommendation,caption='Stratety for Underserved Market') %>%
+    kable_styling(bootstrap_options=c('striped'))
+```
+
