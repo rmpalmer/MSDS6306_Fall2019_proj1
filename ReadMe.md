@@ -14,7 +14,8 @@ Beers.csv
 Breweries.csv  
 
 R Markdown files:
-FinalReport.Rmd, which refers to the following files:  
+FinalReport.Rmd, which refers to the following files: 
+dataload.Rmd
 Question1.Rmd  
 Question2.Rmd  
 Question3.Rmd  
@@ -26,6 +27,6 @@ Question8.Rmd
 Question9.Rmd  
 
 Final products:  
-FinalReport.html (as generated from the above markdown files)  
-FinalReport.ppt  (created manually, using figures and text copied from FinalReport.html)
+FinalReport.html (as generated from the above markdown files)
+CaseStudy_Palmer_Garrity.pptx (created manually, using figures and text copied from FinalReport.html)
 
