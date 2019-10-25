@@ -15,12 +15,15 @@ library(kableExtra)
 
 # shared variables
 q8_colors = c("#C8102E", "#13294b")
-iterations <- 100
+iterations <- 10
 positive_value <- 'Other'
 ```
 
 # Question 8
-Categorize Ales...
+
+
+## Categorize Ales...
+
 ```{r}
 # categorize beers as ipa, or other ale (still have orig columns as well as infilled)
 beers_categorized <- merged %>%
@@ -89,7 +92,7 @@ Out of a total of `r total_count` beers, `r ipa_count` are IPA and `r other_coun
 `r ipa_percent_of_ales` % of ales are IPA.
 
 
-Make a scatter plot of IBU vs ABV, with only IPA's and other ales
+## Make a scatter plot of IBU vs ABV, with only IPA's and other ales
 
 ```{r}
 for_orig_plot %>% ggplot(aes(x=IBU,y=ABV,color=category)) + 
@@ -99,7 +102,7 @@ for_orig_plot %>% ggplot(aes(x=IBU,y=ABV,color=category)) +
                         values=q8_colors)
 ```
 
-Make the same scatter plot, but using infilled data.
+## Make the same scatter plot, but using infilled data.
 
 ```{r}
 infill_normalized %>% ggplot(aes(x=IBU,y=ABV,color=category)) + 
@@ -119,7 +122,7 @@ given Ale is not IPA is the simplest model.  We expect this predictor
 will have an accuracy of `r other_percent_of_ales` %.  It would 
 have a sensitivity of 100 % but specificity of 0 %.
 
-Make a constant classifier and check its performance.
+## Make a constant classifier and check its performance.
 
 ```{r}
 size = nrow(infill_normalized)
@@ -137,12 +140,13 @@ The sensitivity is `r format(100*always_sens,digits=2)` %.
 
 The specificity is `r format(100*always_spec,digits=2)` %.
 
+## Make a random guess classifier and check its performance
 
 A slightly more sophisticated model would be to randomly guess that a beer is an
 ale `r other_percent_of_ales` % of the time.  We simulate this to see how such a
 'guessing' model would perform.
 
-Make a random guess classifier.  Try it 100 times and find its average performance.
+Try it 100 times and find its average performance.
 
 ```{r}
 acc_guess <- matrix(nrow=iterations,ncol=3)
@@ -172,6 +176,8 @@ The random guess model has accuracy of `r format(100*guess_acc,digits=2)` %.
 Its sensitivity is `r format(100*guess_sens,digits=2)` %.
 
 Its specificity is `r format(100*guess_spec,digits=2)` %.
+
+## Look at distributions of ABV and IBU
 
 To see if ABV and IBU values can help us predict if an ale is IPA or not, first
 look at distributions of these quantities, separated by IPA or other ale.
@@ -203,12 +209,49 @@ with t-tests to determine if there is a statistically significant
 difference.
 
 ```{r}
-t.test(IBU ~ category,infill_normalized,var.equal=FALSE)
+ibu_ttest <- t.test(IBU ~ category,infill_normalized,var.equal=FALSE)
+ibu_ttest
 ```
 
 ```{r}
-t.test(ABV ~ category,infill_normalized,var.equal=FALSE)
+abv_ttest <- t.test(ABV ~ category,infill_normalized,var.equal=FALSE)
+abv_ttest
 ```
+
+Check statistically significant difference in ABV and IBU between IPA's and other ales.
+
+```{r}
+abv_col <- c(abv_ttest$estimate[2],
+             abv_ttest$estimate[1])
+ibu_col <- c(ibu_ttest$estimate[2],
+             ibu_ttest$estimate[1])
+hypothesis <- data.frame(abv_col,ibu_col)
+colnames(hypothesis) <- c('ABV(%)','IBU(Intl Bitterness Units)')
+rownames(hypothesis) <- c('IPA','Other Ales')
+kable(hypothesis,digits=4,caption = 'Difference in characteristics between IPAs and other Ales') %>%
+  kable_styling(bootstrap_options = c('striped'))
+
+```
+
+
+Statistical Significance
+
+```{r}
+abv_col <- c(format(abv_ttest$p.value,digits=4),
+             paste(format(abv_ttest$conf.int[1],digits=3),format(abv_ttest$conf.int[2],digits=4),sep=" .. "))
+ibu_col <- c(format(ibu_ttest$p.value,digits=4),
+             paste(format(ibu_ttest$conf.int[1],digits=3),format(ibu_ttest$conf.int[2],digits=1),sep=" .. "))
+stat_sig <- data.frame(abv_col,ibu_col)
+colnames(stat_sig) <- c('ABV','IBU')
+rownames(stat_sig) <- c('p-value','95% conf int')
+kable(stat_sig,caption = 'Statistical significance from Welch t-test') %>%
+  kable_styling()
+
+```
+
+
+
+## Create a Naive Bayes Classifier
 
 Since there are statistically signficant differences with ABV and IBU,
 we first try a Naive Bayes classifier.
@@ -267,8 +310,9 @@ information, we use a KNN classifier, labeling an ale as IPA or not according
 to the majority of its nearest neighbors.  To tune the KNN model, we try
 several different neighborhood sizes (k).
 
+## Create a KNN Classifer
 
-Do KNN classification.  Make 100 iterations of the model, splitting the data
+Make 100 iterations of the model, splitting the data
 into training and test datasets each time and averaging the performance
 statistics of the model.  Do this for a number of different k values.
 
@@ -381,4 +425,20 @@ KNN sensitivity is `r format(100*knn_sens,digits=2)` %.
 
 KNN specificity is `r format(100*knn_spec,digits=2)` %.
 
+## Summarizing performance of classification models...
 
+```{r}
+
+always_perf <- 100 * c(always_sens,always_spec,always_acc)
+guess_perf <-  100 * c(guess_sens,guess_spec,guess_acc)
+nb_perf <-     100 * c(nb_sens,nb_spec,nb_acc)
+knn_perf <-    100 * c(knn_sens,knn_spec,knn_acc)
+
+performance <- data.frame(always_perf, guess_perf, nb_perf, knn_perf)
+colnames(performance) <- c('Constant','Random','Naive Bayes','KNN')
+rownames(performance) <- c('Sensitivity','Specificity','Overall Accuracy')
+
+kable(performance,digits=2,caption = 'Performance (in percent) of models with increasing sophistication') %>%
+  kable_styling(bootstrap_options = c('striped'))
+
+```
