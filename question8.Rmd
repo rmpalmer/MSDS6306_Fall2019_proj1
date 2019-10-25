@@ -10,6 +10,8 @@ library(class)
 library(caret)
 library(e1071)
 library(pracma)
+library(knitr)
+library(kableExtra)
 
 # shared variables
 q8_colors = c("#C8102E", "#13294b")
@@ -159,13 +161,17 @@ mean_accuracy    <- mean_stats[1]
 mean_sensitivity <- mean_stats[2]
 mean_specificity <- mean_stats[3]
 
+guess_acc <- mean_stats[1]
+guess_sens <- mean_stats[2]
+guess_spec <- mean_stats[3]
+
 ```
 
-The random guess model has accuracy of `r format(100*mean_accuracy,digits=2)` %.
+The random guess model has accuracy of `r format(100*guess_acc,digits=2)` %.
 
-Its sensitivity is `r format(100*mean_sensitivity,digits=2)` %.
+Its sensitivity is `r format(100*guess_sens,digits=2)` %.
 
-Its specificity is `r format(100*mean_specificity,digits=2)` %.
+Its specificity is `r format(100*guess_spec,digits=2)` %.
 
 To see if ABV and IBU values can help us predict if an ale is IPA or not, first
 look at distributions of these quantities, separated by IPA or other ale.
@@ -227,18 +233,18 @@ for (j in 1:iterations)
   acc_nb[j,3] <- CM_nb$byClass[2] # specificity
 }
 mean_stats <- colMeans(acc_nb)
-mean_accuracy <- mean_stats[1]
-mean_sensitivity <- mean_stats[2]
-mean_specificity <- mean_stats[3]
+nb_acc <- mean_stats[1]
+nb_sens <- mean_stats[2]
+nb_spec <- mean_stats[3]
 ```
 
 Averaging over `r iterations` trials, the Naive Bayes classifier has
 
-accuracy of `r format(100*mean_accuracy,digits=2)` %
+accuracy of `r format(100*nb_acc,digits=2)` %
 
-sensitivity of `r format(100*mean_sensitivity,digits=2)` %
+sensitivity of `r format(100*nb_sens,digits=2)` %
 
-specificity of `r format(100*mean_specificity,digits=2)` %
+specificity of `r format(100*nb_spec,digits=2)` %
 
 To understand the classification regions of the Naieve Bayes classifier,
 we make a prediction at every point in the ABV vs IBU space.
