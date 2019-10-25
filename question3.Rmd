@@ -5,18 +5,16 @@ date: "10/9/2019"
 output: html_document
 summary: "We found that IBU and ABV were the only features with missing values. ABV had 62 NAs and IBU had 1005 NAs. All of the ABV NAs also had NA IBU. We decided to fill ABV values with the median ABV from beers of the same type. To fill missing values in IBU, we fit a regression tree to observations without missing values and then used that model to predict each missing IBU value. Filled values are returned in the merged dataframe as merged$ABVfill and merged$IBUfill."
 ---
-
+# Question 3: Address the missing values in each column.
 ```{r question3, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+library(rpart)
+library(rpart.plot)
 ```
 
-# Question 3: Address the missing values in each column.
-
-Data Exploration:
+# Data Exploration:
+Determine Which Variables Have Missing Values and How Many
 ```{r}
-########################################################################
-# Data Exploration
-########################################################################
 n_cols = dim(merged)[2]
 for (i in 1:n_cols)
 {
@@ -32,11 +30,10 @@ length(missingIBUindex)
 length(unique(allNAindex)) 
 ```
 
-Fill ABV missing values:
+# Fill ABV missing values:
+For filled each missing ABV value with the median ABV value for that Beer Style. For example, if the missing ABV was for an IPA, then we filled the value with the median ABV value for IPAs.                
+Filled ABV values are placed in the merged data frame as merged$ABVfill.
 ```{r}
-########################################################################
-# Fill ABV missing values
-########################################################################
 merged %>% ggplot(aes(x=Style, y=ABV)) +
   geom_boxplot(fill ="#13294b", alpha=0.3) +
   theme(axis.text.x = element_text(angle = 90, hjust=1)) +
@@ -54,11 +51,10 @@ which(is.na(merged$ABV))
 which(is.na(merged$ABVfill)) # looks like all values were filled...we are good to proceed
 ```
 
-Fill IBU missing values: ***note that I use "set.seed(8)" to ensure that the model predictions are always the same. My understand is that this consistency should ensure that any downstream dependency shouldn't break. Filled IBU values are placed in the merged data frame as merged$IBUfill.
+# Fill IBU missing values: 
+We used a regression tree with ABV and Beer Style as predictors to fill missing IBU values.
+Filled IBU values are placed in the merged data frame as merged$IBUfill.
 ```{r}
-########################################################################
-# Fill IBU missing values
-########################################################################
 # Let's try a regression tree (CART)...throw the kitchen sink at it...:)
 # If I get some time, I'd like to tree a bagging algorithm: http://uc-r.github.io/regression_trees
 library(rpart)

@@ -13,20 +13,13 @@ library(ggplot2)
 library(maps)
 library(usmap)
 library(ggthemes)
+library(grid)
 ```
 
-# Basic solution:
+# Map the number of breweries per state:
 ```{r}
 breweries_by_state <- breweries_raw %>%  group_by(State) %>% summarize(count = n())
 
-# simple bar chart...# see below
-# breweries_by_state %>% ggplot(aes(x=reorder(State, -count), y=count)) +
-#   geom_col() +
-#   labs(title = "Breweries by State", y="Number of Breweries", x="")
-```
-
-# It would be more interesting to have a map visualization
-```{r}
 # library(maps)
 states <- map_data("state")
 
@@ -48,9 +41,12 @@ breweries_by_state$abbr <- as.character(breweries_by_state$abbr)
 breweries_by_state_temp <- merge(breweries_by_state, states_and_dc, by="abbr")
 breweries_by_state_tomap <- merge(breweries_by_state_temp, statepop, by="abbr")
 breweries_by_state_tomap$perCapita <- breweries_by_state_tomap$count/(breweries_by_state_tomap$pop_2015/1000000)
+```
 
+# Number of breweries by state:
+```{r}
 # library(usmap)
-library(ggthemes)
+# library(ggthemes)
 
 ### Map the total number of breweries in each state:
 plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
@@ -59,7 +55,10 @@ plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
   scale_fill_continuous(name = "n", low="white", high="#c8102e") +
   theme(legend.position="right") +
   labs(title = 'Number of Breweries in each state')
+```
 
+# Breweries per Capita in each state:
+```{r}
 ### Map the number of breweries per capita in each state:
 plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
   values = "perCapita", theme = theme_map(), labels = FALSE,
@@ -70,6 +69,7 @@ plot_usmap(regions = c("states"), data = breweries_by_state_tomap,
   labs(title = 'Breweries per Capita*', caption = "*per 1M people")
 ```
 
+# Supplemental bar charts of breweries per state and breweries per capita by state:
 ```{r}
 #bar charts
 library(grid)
