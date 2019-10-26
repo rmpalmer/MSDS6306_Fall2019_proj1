@@ -13,9 +13,9 @@ Original raw data:
 Beers.csv  
 Breweries.csv  
 
-R Markdown files:
-FinalReport.Rmd, which refers to the following files: 
-dataload.Rmd
+R Markdown files:  
+FinalReport.Rmd, which refers to the following files:  
+dataload.Rmd  
 Question1.Rmd  
 Question2.Rmd  
 Question3.Rmd  
